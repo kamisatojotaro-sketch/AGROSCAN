@@ -558,6 +558,12 @@ def tools_page():
 
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
+    primary_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    if os.path.exists(primary_path):
+        return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+    for sample_name in ["sample_tomato_blight.jpg", "sample_potato_late.jpg", "sample_rice_blast.jpg", "sample_healthy_apple.jpg", "sample_corn_rust.jpg", "sample_grape_rot.jpg"]:
+        if filename.endswith(sample_name) and os.path.exists(os.path.join(SAMPLES_FOLDER, sample_name)):
+            return send_from_directory(SAMPLES_FOLDER, sample_name)
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
