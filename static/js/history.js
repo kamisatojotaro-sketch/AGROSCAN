@@ -20,13 +20,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function loadHistory() {
-  try {
-    const res = await fetch("/api/history");
-    historyRows = await res.json();
-    renderHistory();
-  } catch (err) {
-    showToast("Failed to load scan history", "error");
-  }
+  historyRows = Store.historyRows();
+  renderHistory();
 }
 
 function renderHistory() {
@@ -108,16 +103,10 @@ function renderHistory() {
 }
 
 async function deleteScan(scanId) {
-  try {
-    const res = await fetch(`/api/scan/${scanId}`, { method: "DELETE" });
-    if (res.ok) {
-      historyRows = historyRows.filter(r => r.scan_id !== scanId);
-      renderHistory();
-      showToast(currentLang === "ta" ? "பதிவு நீக்கப்பட்டது" : "Scan deleted from archive", "info");
-    }
-  } catch (e) {
-    showToast("Could not delete scan", "error");
-  }
+  Store.deleteScan(scanId);
+  historyRows = Store.historyRows();
+  renderHistory();
+  showToast(currentLang === "ta" ? "பதிவு நீக்கப்பட்டது" : "Scan deleted from archive", "info");
 }
 
 async function clearAllHistory() {
@@ -127,14 +116,8 @@ async function clearAllHistory() {
     : "Are you sure you want to clear all scan records from your archive?";
   if (!confirm(confirmMsg)) return;
 
-  try {
-    const res = await fetch("/api/history/clear", { method: "DELETE" });
-    if (res.ok) {
-      historyRows = [];
-      renderHistory();
-      showToast(currentLang === "ta" ? "காப்பகம் அழிக்கப்பட்டது" : "Scan archive cleared", "info");
-    }
-  } catch (e) {
-    showToast("Failed to clear history", "error");
-  }
+  Store.clearScans();
+  historyRows = [];
+  renderHistory();
+  showToast(currentLang === "ta" ? "காப்பகம் அழிக்கப்பட்டது" : "Scan archive cleared", "info");
 }

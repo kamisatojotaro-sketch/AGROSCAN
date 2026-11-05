@@ -16,9 +16,9 @@
     </div>
 
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <a href="/api/export/csv" class="btn btn-outline btn-sm">
+      <button type="button" onclick="Store.exportCSV()" class="btn btn-outline btn-sm">
         📥 <span data-en="Export CSV" data-ta="CSV பதிவிறக்கம்">Export CSV</span>
-      </a>
+      </button>
       <button class="btn btn-outline btn-sm" onclick="clearAllHistory()">
         🗑️ <span data-en="Clear Archive" data-ta="காப்பகத்தை அழி">Clear Archive</span>
       </button>

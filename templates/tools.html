@@ -132,7 +132,7 @@
     <div class="section-header-row">
       <h2 class="section-circle-title">
         <span class="circle-dot">◯</span>
-        <span data-en="Farmer Field Notes Journal (SQLite)" data-ta="விவசாயி கள குறிப்பேடு (SQLite)">Farmer Field Notes Journal (SQLite)</span>
+        <span data-en="Farmer Field Notes Journal (Private)" data-ta="விவசாயி கள குறிப்பேடு (SQLite)">Farmer Field Notes Journal (Private)</span>
       </h2>
       <span style="font-size:0.78rem;color:var(--text-muted);font-family:var(--font-mono);" data-en="Log spray dates, seed lots, & plot observations" data-ta="தெளிப்பு தேதிகள் மற்றும் குறிப்புகளை சேமிக்கவும்">
         Log spray dates, seed lots, &amp; plot observations
@@ -264,14 +264,9 @@ function updateWeatherSim() {
 }
 
 let notesList = [];
-async function loadNotes() {
-  try {
-    const res = await fetch("/api/notes");
-    notesList = await res.json();
-    renderNotes();
-  } catch (e) {
-    console.warn("Could not load notes:", e);
-  }
+function loadNotes() {
+  notesList = Store.getNotes();
+  renderNotes();
 }
 
 function renderNotes() {
@@ -303,15 +298,9 @@ function renderNotes() {
   `).join("");
 }
 
-async function togglePinNote(id) {
-  await fetch(`/api/notes/${id}/pin`, { method: "POST" });
-  loadNotes();
-}
+function togglePinNote(id) { Store.togglePin(id); loadNotes(); }
 
-async function deleteNote(id) {
-  await fetch(`/api/notes/${id}`, { method: "DELETE" });
-  loadNotes();
-}
+function deleteNote(id) { Store.deleteNote(id); loadNotes(); }
 
 document.addEventListener("DOMContentLoaded", () => {
   calculateDosage();
@@ -325,18 +314,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const content = document.getElementById("note-content").value.trim();
     if (!title || !content) return;
 
-    const res = await fetch("/api/notes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, crop, content })
-    });
-    if (res.ok) {
-      document.getElementById("note-title").value = "";
-      document.getElementById("note-crop").value = "";
-      document.getElementById("note-content").value = "";
-      showToast(currentLang === "ta" ? "கள குறிப்பு சேமிக்கப்பட்டது!" : "Field note saved to SQLite!", "success");
-      loadNotes();
-    }
+    Store.addNote(title, content, crop);
+    document.getElementById("note-title").value = "";
+    document.getElementById("note-crop").value = "";
+    document.getElementById("note-content").value = "";
+    showToast(currentLang === "ta" ? "கள குறிப்பு சேமிக்கப்பட்டது!" : "Field note saved privately in your browser!", "success");
+    loadNotes();
   });
 
   window.addEventListener("langchange", () => {

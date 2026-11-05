@@ -10,21 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const scanId = params.get("id");
 
   // Load from API if scanId given, else fallback to sessionStorage
-  if (scanId) {
-    try {
-      const res = await fetch(`/api/scan/${scanId}`);
-      if (res.ok) {
-        scanData = await res.json();
-      }
-    } catch (e) {
-      console.warn("Could not fetch scan by ID, checking sessionStorage");
-    }
-  }
-
-  if (!scanData) {
-    const cached = sessionStorage.getItem("agroscan_last_result");
-    if (cached) scanData = JSON.parse(cached);
-  }
+  if (scanId) scanData = Store.getScan(scanId);
 
   if (!scanData) {
     window.location.href = "/";
@@ -44,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Printable PDF Report button
   document.getElementById("download-pdf-btn").addEventListener("click", () => {
-    window.open(`/api/report/${scanData.scan_id}?lang=${currentLang}`, "_blank");
+    window.open(`/report?id=${scanData.scan_id}&lang=${currentLang}`, "_blank");
   });
 });
 
@@ -150,18 +136,11 @@ async function saveScanNote() {
   const notes = document.getElementById("scan-note-input").value;
   const status = document.getElementById("scan-status-select").value;
 
-  try {
-    const res = await fetch(`/api/scan/${scanData.scan_id}/note`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes, status })
-    });
-    if (res.ok) {
-      scanData.notes = notes;
-      scanData.status = status;
-      showToast(currentLang === "ta" ? "குறிப்பு காப்பகத்தில் சேமிக்கப்பட்டது!" : "Field note saved to SQLite archive!", "success");
-    }
-  } catch (e) {
+  if (Store.updateScan(scanData.scan_id, { notes, status })) {
+    scanData.notes = notes;
+    scanData.status = status;
+    showToast(currentLang === "ta" ? "குறிப்பு உங்கள் தனிப்பட்ட காப்பகத்தில் சேமிக்கப்பட்டது!" : "Field note saved to your private archive!", "success");
+  } else {
     showToast("Failed to save note", "error");
   }
 }

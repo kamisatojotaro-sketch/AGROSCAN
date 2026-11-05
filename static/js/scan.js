@@ -98,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!res.ok || data.error) {
         throw new Error(data.error || "Prediction failed");
       }
-      sessionStorage.setItem("agroscan_last_result", JSON.stringify(data));
+      Store.saveScan(data);
       window.location.href = `/result?id=${data.scan_id}`;
     } catch (err) {
       showToast("Scan failed: " + err.message, "error");
@@ -128,7 +128,7 @@ async function runSampleScan(specimenKey) {
     if (!res.ok || data.error) {
       throw new Error(data.error || "Sample scan failed");
     }
-    sessionStorage.setItem("agroscan_last_result", JSON.stringify(data));
+    Store.saveScan(data);
     window.location.href = `/result?id=${data.scan_id}`;
   } catch (err) {
     showToast("Sample scan failed: " + err.message, "error");
@@ -138,15 +138,12 @@ async function runSampleScan(specimenKey) {
 
 async function loadRecentScansPreview() {
   try {
-    const [histRes, statsRes] = await Promise.all([
-      fetch("/api/history"),
-      fetch("/api/stats")
-    ]);
-    recentScansCache = await histRes.json();
+    recentScansCache = Store.historyRows();
+    const statsRes = await fetch("/api/stats");
     const stats = await statsRes.json();
 
     const scanCountEl = document.getElementById("home-stat-scans");
-    if (scanCountEl) scanCountEl.textContent = stats.total_scans || 0;
+    if (scanCountEl) scanCountEl.textContent = recentScansCache.length;
     const classesEl = document.getElementById("home-stat-classes");
     if (classesEl && stats.total_classes_db) classesEl.textContent = stats.total_classes_db;
     const cropsEl = document.getElementById("home-stat-crops");

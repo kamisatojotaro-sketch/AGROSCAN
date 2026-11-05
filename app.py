@@ -3,6 +3,7 @@ import csv
 import io
 import json
 import uuid
+import base64
 import shutil
 import sqlite3
 import hashlib
@@ -146,100 +147,36 @@ def get_db():
 
 
 def init_db():
-    with get_db() as conn:
-        # 1. Scans table (User Scan Archive — starts empty at 0 rows)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS scans (
-                id          TEXT PRIMARY KEY,
-                timestamp   TEXT NOT NULL,
-                filename    TEXT NOT NULL,
-                class_name  TEXT NOT NULL,
-                confidence  REAL NOT NULL,
-                top_probs   TEXT NOT NULL,
-                lang        TEXT DEFAULT 'en',
-                notes       TEXT DEFAULT '',
-                status      TEXT DEFAULT 'Monitoring'
-            )
-        """)
-
-        # Ensure columns exist if upgrading an older database
-        existing_cols = [r["name"] for r in conn.execute("PRAGMA table_info(scans)").fetchall()]
-        if "notes" not in existing_cols:
-            conn.execute("ALTER TABLE scans ADD COLUMN notes TEXT DEFAULT ''")
-        if "status" not in existing_cols:
-            conn.execute("ALTER TABLE scans ADD COLUMN status TEXT DEFAULT 'Monitoring'")
-
-        # 2. Disease Encyclopedia table (Backed by SQLite with all 42 classes)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS diseases (
-                class_id    TEXT PRIMARY KEY,
-                crop        TEXT NOT NULL,
-                severity    TEXT NOT NULL,
-                emoji       TEXT NOT NULL,
-                en_json     TEXT NOT NULL,
-                ta_json     TEXT NOT NULL
-            )
-        """)
-
-        # Sync all 42 classes into SQLite `diseases` table
-        for class_id, info in DISEASES.items():
-            crop = info.get("crop", class_id.split("___")[0].replace("_", " "))
-            en_data = info["en"]
-            ta_data = info["ta"]
+    """Shared, read-only reference data only (disease encyclopedia).
+    Personal data (scans, notes) is NEVER stored on the server; it lives in each
+    user's own browser, so every person's records are private to them."""
+    try:
+        with get_db() as conn:
             conn.execute("""
-                INSERT OR REPLACE INTO diseases (class_id, crop, severity, emoji, en_json, ta_json)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                class_id,
-                crop,
-                en_data.get("severity", "moderate"),
-                en_data.get("emoji", "🌿"),
-                json.dumps(en_data, ensure_ascii=False),
-                json.dumps(ta_data, ensure_ascii=False)
-            ))
-
-        # 3. Farmer Field Notes table (Journal for tracking treatments & observations)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS field_notes (
-                id          TEXT PRIMARY KEY,
-                title       TEXT NOT NULL,
-                content     TEXT NOT NULL,
-                crop        TEXT DEFAULT 'General',
-                is_pinned   INTEGER DEFAULT 0,
-                created_at  TEXT NOT NULL
-            )
-        """)
-
-        note_count = conn.execute("SELECT COUNT(*) FROM field_notes").fetchone()[0]
-        if note_count == 0:
-            now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            conn.execute("""
-                INSERT INTO field_notes (id, title, content, crop, is_pinned, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                "note01",
-                "Monsoon Blight Prevention Schedule",
-                "During high humidity (>85%), inspect lower tomato and potato leaves every 3 days. Keep neem oil (5ml/L) and Trichoderma viride ready for preventive spraying before heavy rains.",
-                "Tomato & Potato",
-                1,
-                now_str
-            ))
-            conn.execute("""
-                INSERT INTO field_notes (id, title, content, crop, is_pinned, created_at)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                "note02",
-                "Sprayer Calibration Checklist",
-                "1 knapsack sprayer tank = 15 Liters. Standard organic neem dosage = 75 ml per tank (5 ml/L). Standard Mancozeb 75% WP dosage = 37.5 g per tank (2.5 g/L). Always add 5 ml wetting agent.",
-                "General",
-                0,
-                now_str
-            ))
-
-        conn.commit()
+                CREATE TABLE IF NOT EXISTS diseases (
+                    class_id    TEXT PRIMARY KEY,
+                    crop        TEXT NOT NULL,
+                    severity    TEXT NOT NULL,
+                    emoji       TEXT NOT NULL,
+                    en_json     TEXT NOT NULL,
+                    ta_json     TEXT NOT NULL
+                )
+            """)
+            for class_id, info in DISEASES.items():
+                crop = info.get("crop", class_id.split("___")[0].replace("_", " "))
+                en_data, ta_data = info["en"], info["ta"]
+                conn.execute(
+                    "INSERT OR REPLACE INTO diseases (class_id, crop, severity, emoji, en_json, ta_json) VALUES (?, ?, ?, ?, ?, ?)",
+                    (class_id, crop, en_data.get("severity", "moderate"), en_data.get("emoji", "x"),
+                     json.dumps(en_data, ensure_ascii=False), json.dumps(ta_data, ensure_ascii=False)))
+            conn.commit()
+    except Exception as e:
+        print(f"[WARN] SQLite init skipped: {e}")
 
 
 init_db()
+
+
 
 
 # ─────────────────────────────────────────────
@@ -519,6 +456,8 @@ Farmer's question: {question}"""
 
 
 # ─────────────────────────────────────────────
+
+# ─────────────────────────────────────────────
 # Page Routes
 # ─────────────────────────────────────────────
 @app.route("/")
@@ -556,20 +495,47 @@ def tools_page():
     return render_template("tools.html")
 
 
-@app.route("/uploads/<filename>")
-def uploaded_file(filename):
-    primary_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-    if os.path.exists(primary_path):
-        return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
-    for sample_name in ["sample_tomato_blight.jpg", "sample_potato_late.jpg", "sample_rice_blast.jpg", "sample_healthy_apple.jpg", "sample_corn_rust.jpg", "sample_grape_rot.jpg"]:
-        if filename.endswith(sample_name) and os.path.exists(os.path.join(SAMPLES_FOLDER, sample_name)):
-            return send_from_directory(SAMPLES_FOLDER, sample_name)
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
+@app.route("/report")
+def report_page():
+    """Printable report. Rendered in the browser from the user's own private scan data."""
+    return render_template("report_print.html")
 
 
 # ─────────────────────────────────────────────
-# API Routes
+# API Routes (stateless: nothing personal is stored on the server)
 # ─────────────────────────────────────────────
+def make_thumb_data_url(img_path, max_side=480):
+    """Small JPEG data-URL so the browser can keep the leaf photo privately."""
+    try:
+        with Image.open(img_path) as im:
+            im = im.convert("RGB")
+            im.thumbnail((max_side, max_side))
+            buf = io.BytesIO()
+            im.save(buf, format="JPEG", quality=72, optimize=True)
+        return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+    except Exception as e:
+        print(f"[WARN] thumbnail failed: {e}")
+        return ""
+
+
+def build_scan_response(img_path, lang):
+    class_name, confidence, top5 = predict_image(img_path)
+    disease_payload = format_disease_payload(class_name)
+    return {
+        "scan_id": uuid.uuid4().hex[:8],
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "image_url": make_thumb_data_url(img_path),
+        "class_name": class_name,
+        "crop": disease_payload["crop"],
+        "confidence": confidence,
+        "top5": top5,
+        "disease": disease_payload,
+        "lang": lang,
+        "notes": "",
+        "status": "Monitoring"
+    }
+
+
 @app.route("/api/predict", methods=["POST"])
 def api_predict():
     if "file" not in request.files:
@@ -579,242 +545,34 @@ def api_predict():
         return jsonify({"error": "Invalid file type. Upload PNG, JPG, or WEBP."}), 400
 
     lang = request.form.get("lang", "en")
-    ext = file.filename.rsplit(".", 1)[1].lower()
-    scan_id = str(uuid.uuid4())[:8]
-    filename = secure_filename(f"{scan_id}_{file.filename}")
-    filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+    filepath = os.path.join(app.config["UPLOAD_FOLDER"], secure_filename(f"{uuid.uuid4().hex[:8]}_{file.filename}"))
     file.save(filepath)
-
-    class_name, confidence, top5 = predict_image(filepath)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    with get_db() as conn:
-        conn.execute(
-            "INSERT INTO scans (id, timestamp, filename, class_name, confidence, top_probs, lang, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (scan_id, timestamp, filename, class_name, confidence, json.dumps(top5), lang, "", "Monitoring")
-        )
-        conn.commit()
-
-    disease_payload = format_disease_payload(class_name)
-    return jsonify({
-        "scan_id": scan_id,
-        "timestamp": timestamp,
-        "image_url": f"/uploads/{filename}",
-        "class_name": class_name,
-        "crop": disease_payload["crop"],
-        "confidence": confidence,
-        "top5": top5,
-        "disease": disease_payload,
-        "notes": "",
-        "status": "Monitoring"
-    })
+    try:
+        return jsonify(build_scan_response(filepath, lang))
+    finally:
+        try:
+            os.remove(filepath)  # never keep a user's photo on the server
+        except OSError:
+            pass
 
 
 @app.route("/api/sample-scan", methods=["POST"])
 def api_sample_scan():
-    """Runs a real scan using one of the built-in sample leaf specimens."""
+    """Runs a scan on one of the built-in sample leaf specimens."""
     data = request.get_json(silent=True) or {}
-    specimen_key = data.get("specimen", "tomato_blight")
-    lang = data.get("lang", "en")
-
-    spec = SAMPLE_SPECIMENS.get(specimen_key, SAMPLE_SPECIMENS["tomato_blight"])
+    spec = SAMPLE_SPECIMENS.get(data.get("specimen", "tomato_blight"), SAMPLE_SPECIMENS["tomato_blight"])
     sample_src = os.path.join(SAMPLES_FOLDER, spec["file"])
     if not os.path.exists(sample_src):
-        # Fallback to uploads folder if stored there
-        alt_src = os.path.join(UPLOAD_FOLDER, spec["file"])
-        if os.path.exists(alt_src):
-            sample_src = alt_src
-
-    scan_id = str(uuid.uuid4())[:8]
-    filename = f"{scan_id}_{spec['file']}"
-    dest_path = os.path.join(UPLOAD_FOLDER, filename)
-    if os.path.exists(sample_src):
-        shutil.copyfile(sample_src, dest_path)
-    else:
-        # Generate a quick green leaf placeholder if missing
-        if PIL_AVAILABLE:
-            img = Image.new("RGB", (224, 224), (72, 118, 62))
-            img.save(dest_path)
-
-    class_name, confidence, top5 = predict_image(dest_path)
-    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    with get_db() as conn:
-        conn.execute(
-            "INSERT INTO scans (id, timestamp, filename, class_name, confidence, top_probs, lang, notes, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (scan_id, timestamp, filename, class_name, confidence, json.dumps(top5), lang, "", "Monitoring")
-        )
-        conn.commit()
-
-    disease_payload = format_disease_payload(class_name)
-    return jsonify({
-        "scan_id": scan_id,
-        "timestamp": timestamp,
-        "image_url": f"/uploads/{filename}",
-        "class_name": class_name,
-        "crop": disease_payload["crop"],
-        "confidence": confidence,
-        "top5": top5,
-        "disease": disease_payload,
-        "notes": "",
-        "status": "Monitoring"
-    })
-
-
-@app.route("/api/scan/<scan_id>")
-def api_get_scan(scan_id):
-    with get_db() as conn:
-        row = conn.execute("SELECT * FROM scans WHERE id = ?", (scan_id,)).fetchone()
-    if not row:
-        return jsonify({"error": "Scan not found"}), 404
-    class_name = row["class_name"]
-    disease_payload = format_disease_payload(class_name)
-    return jsonify({
-        "scan_id": row["id"],
-        "timestamp": row["timestamp"],
-        "image_url": f"/uploads/{row['filename']}",
-        "class_name": class_name,
-        "crop": disease_payload["crop"],
-        "confidence": row["confidence"],
-        "top5": json.loads(row["top_probs"]),
-        "disease": disease_payload,
-        "notes": row["notes"] if "notes" in row.keys() else "",
-        "status": row["status"] if "status" in row.keys() else "Monitoring"
-    })
-
-
-@app.route("/api/scan/<scan_id>/note", methods=["POST"])
-def api_update_scan_note(scan_id):
-    data = request.get_json(silent=True) or {}
-    notes = data.get("notes", "").strip()
-    status = data.get("status", "Monitoring").strip()
-    with get_db() as conn:
-        conn.execute(
-            "UPDATE scans SET notes = ?, status = ? WHERE id = ?",
-            (notes, status, scan_id)
-        )
-        conn.commit()
-    return jsonify({"ok": True, "scan_id": scan_id, "notes": notes, "status": status})
-
-
-@app.route("/api/scan/<scan_id>", methods=["DELETE"])
-def api_delete_scan(scan_id):
-    with get_db() as conn:
-        conn.execute("DELETE FROM scans WHERE id = ?", (scan_id,))
-        conn.commit()
-    return jsonify({"ok": True, "deleted": scan_id})
-
-
-@app.route("/api/history/clear", methods=["DELETE"])
-def api_clear_history():
-    with get_db() as conn:
-        conn.execute("DELETE FROM scans")
-        conn.commit()
-    return jsonify({"ok": True})
-
-
-@app.route("/api/history")
-def api_history():
-    with get_db() as conn:
-        rows = conn.execute("SELECT * FROM scans ORDER BY timestamp DESC LIMIT 200").fetchall()
-    result = []
-    for r in rows:
-        info = format_disease_payload(r["class_name"])
-        result.append({
-            "scan_id": r["id"],
-            "timestamp": r["timestamp"],
-            "image_url": f"/uploads/{r['filename']}",
-            "class_name": r["class_name"],
-            "crop": info["crop"],
-            "confidence": r["confidence"],
-            "name_en": info["en"]["name"],
-            "name_ta": info["ta"]["name"],
-            "severity": info["en"]["severity"],
-            "emoji": info["en"]["emoji"],
-            "notes": r["notes"] if "notes" in r.keys() else "",
-            "status": r["status"] if "status" in r.keys() else "Monitoring"
-        })
-    return jsonify(result)
-
-
-@app.route("/api/export/csv")
-def api_export_csv():
-    """Exports the farmer's SQLite scan history as a downloadable CSV spreadsheet."""
-    with get_db() as conn:
-        rows = conn.execute("SELECT * FROM scans ORDER BY timestamp DESC").fetchall()
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow([
-        "Scan ID", "Timestamp", "Crop", "Disease (EN)", "Disease (TA)",
-        "Confidence (%)", "Severity", "Status", "Immediate Action", "Organic Treatment", "Farmer Notes"
-    ])
-    for r in rows:
-        info = format_disease_payload(r["class_name"])
-        writer.writerow([
-            r["id"],
-            r["timestamp"],
-            info["crop"],
-            info["en"]["name"],
-            info["ta"]["name"],
-            r["confidence"],
-            info["en"]["severity"].upper(),
-            r["status"] if "status" in r.keys() else "Monitoring",
-            info["en"]["immediate"],
-            info["en"]["organic"],
-            r["notes"] if "notes" in r.keys() else ""
-        ])
-
-    csv_data = "\ufeff" + output.getvalue()  # UTF-8 BOM so Excel renders Tamil script properly
-    return Response(
-        csv_data,
-        mimetype="text/csv; charset=utf-8",
-        headers={"Content-Disposition": "attachment; filename=AgroScan_Field_Archive.csv"}
-    )
+        return jsonify({"error": "Sample image missing"}), 404
+    return jsonify(build_scan_response(sample_src, data.get("lang", "en")))
 
 
 @app.route("/api/stats")
 def api_stats():
-    with get_db() as conn:
-        rows = conn.execute("SELECT class_name, confidence, timestamp FROM scans ORDER BY timestamp ASC").fetchall()
-        total_diseases_db = conn.execute("SELECT COUNT(*) FROM diseases").fetchone()[0]
-        total_notes_db = conn.execute("SELECT COUNT(*) FROM field_notes").fetchone()[0]
-
-    total = len(rows)
-    healthy = sum(1 for r in rows if "healthy" in r["class_name"].lower())
-    diseased = total - healthy
-    avg_conf = round(sum(r["confidence"] for r in rows) / total, 1) if total else 0
-
-    counts = {}
-    severity_counts = {"critical": 0, "high": 0, "moderate": 0, "none": 0}
-    crop_counts = {}
-
-    for r in rows:
-        cn = r["class_name"]
-        info = format_disease_payload(cn)
-        label = info["en"]["name"]
-        counts[label] = counts.get(label, 0) + 1
-        sev = info["en"]["severity"]
-        severity_counts[sev] = severity_counts.get(sev, 0) + 1
-        crop = info["crop"]
-        crop_counts[crop] = crop_counts.get(crop, 0) + 1
-
-    sorted_diseases = sorted(counts.items(), key=lambda x: x[1], reverse=True)[:8]
-    sorted_crops = sorted(crop_counts.items(), key=lambda x: x[1], reverse=True)
-
+    """Global reference numbers only. Per-user statistics are computed in the browser."""
     return jsonify({
-        "total_scans": total,
-        "healthy_count": healthy,
-        "diseased_count": diseased,
-        "avg_confidence": avg_conf,
-        "total_classes_db": total_diseases_db,
+        "total_classes_db": len(DISEASES),
         "total_crops_db": len(set(v.get("crop", "") for v in DISEASES.values())),
-        "total_notes_db": total_notes_db,
-        "disease_labels": [x[0] for x in sorted_diseases],
-        "disease_counts": [x[1] for x in sorted_diseases],
-        "crop_labels": [x[0] for x in sorted_crops],
-        "crop_counts": [x[1] for x in sorted_crops],
-        "severity_counts": severity_counts,
         "model_metrics": {
             "architecture": "MobileNetV2 (Transfer Learning, ImageNet weights)",
             "dataset": "PlantVillage + Indian Staple Crops (54,305 leaf images, 42 classes)",
@@ -829,22 +587,20 @@ def api_stats():
 
 @app.route("/api/encyclopedia")
 def api_encyclopedia():
-    """Fetches all 42 crop diseases directly from the SQLite `diseases` table."""
-    with get_db() as conn:
-        rows = conn.execute("SELECT * FROM diseases ORDER BY crop ASC, class_id ASC").fetchall()
-
+    """Disease encyclopedia from the SQLite `diseases` table (falls back to in-memory data)."""
     items = []
-    for r in rows:
-        en_data = json.loads(r["en_json"])
-        ta_data = json.loads(r["ta_json"])
-        items.append({
-            "class_id": r["class_id"],
-            "crop": r["crop"],
-            "severity": r["severity"],
-            "emoji": r["emoji"],
-            "en": en_data,
-            "ta": ta_data
-        })
+    try:
+        with get_db() as conn:
+            rows = conn.execute("SELECT * FROM diseases ORDER BY crop ASC, class_id ASC").fetchall()
+        for r in rows:
+            items.append({"class_id": r["class_id"], "crop": r["crop"], "severity": r["severity"],
+                          "emoji": r["emoji"], "en": json.loads(r["en_json"]), "ta": json.loads(r["ta_json"])})
+    except Exception:
+        items = []
+    if len(items) != len(DISEASES):
+        items = [{"class_id": k, "crop": v.get("crop", ""), "severity": v["en"].get("severity", "moderate"),
+                  "emoji": v["en"].get("emoji", ""), "en": v["en"], "ta": v["ta"]}
+                 for k, v in sorted(DISEASES.items(), key=lambda kv: (kv[1].get("crop", ""), kv[0]))]
     return jsonify(items)
 
 
@@ -924,56 +680,6 @@ def api_model_metrics():
     })
 
 
-@app.route("/api/notes", methods=["GET", "POST"])
-def api_notes():
-    if request.method == "GET":
-        with get_db() as conn:
-            rows = conn.execute("SELECT * FROM field_notes ORDER BY is_pinned DESC, created_at DESC").fetchall()
-        return jsonify([dict(r) for r in rows])
-
-    data = request.get_json(silent=True) or {}
-    title = data.get("title", "").strip()
-    content = data.get("content", "").strip()
-    crop = data.get("crop", "General").strip() or "General"
-    if not title or not content:
-        return jsonify({"error": "Title and content are required"}), 400
-
-    note_id = "n_" + str(uuid.uuid4())[:6]
-    created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with get_db() as conn:
-        conn.execute(
-            "INSERT INTO field_notes (id, title, content, crop, is_pinned, created_at) VALUES (?, ?, ?, ?, 0, ?)",
-            (note_id, title, content, crop, created_at)
-        )
-        conn.commit()
-    return jsonify({
-        "id": note_id,
-        "title": title,
-        "content": content,
-        "crop": crop,
-        "is_pinned": 0,
-        "created_at": created_at
-    })
-
-
-@app.route("/api/notes/<note_id>", methods=["DELETE"])
-def api_delete_note(note_id):
-    with get_db() as conn:
-        conn.execute("DELETE FROM field_notes WHERE id = ?", (note_id,))
-        conn.commit()
-    return jsonify({"ok": True})
-
-
-@app.route("/api/notes/<note_id>/pin", methods=["POST"])
-def api_pin_note(note_id):
-    with get_db() as conn:
-        row = conn.execute("SELECT is_pinned FROM field_notes WHERE id = ?", (note_id,)).fetchone()
-        if not row:
-            return jsonify({"error": "Not found"}), 404
-        new_pin = 0 if row["is_pinned"] else 1
-        conn.execute("UPDATE field_notes SET is_pinned = ? WHERE id = ?", (new_pin, note_id))
-        conn.commit()
-    return jsonify({"ok": True, "is_pinned": new_pin})
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -988,24 +694,6 @@ def api_chat():
     return jsonify({"reply": reply})
 
 
-@app.route("/api/report/<scan_id>")
-def api_report(scan_id):
-    """ Printable HTML report (user can Ctrl+P / Save as PDF) """
-    lang = request.args.get("lang", "en")
-    with get_db() as conn:
-        row = conn.execute("SELECT * FROM scans WHERE id = ?", (scan_id,)).fetchone()
-    if not row:
-        return "Scan not found", 404
-    info = format_disease_payload(row["class_name"])
-    d = info.get(lang, info["en"])
-    return render_template(
-        "report_print.html",
-        scan=row,
-        disease=d,
-        crop=info["crop"],
-        lang=lang,
-        top5=json.loads(row["top_probs"])
-    )
 
 
 if __name__ == "__main__":

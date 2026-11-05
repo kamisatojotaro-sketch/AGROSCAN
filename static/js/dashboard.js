@@ -12,13 +12,7 @@ window.addEventListener('langchange', loadDashboard);
 window.addEventListener('themechange', loadDashboard);
 
 async function loadDashboard() {
-  try {
-    const res  = await fetch('/api/stats');
-    const data = await res.json();
-    renderDashboard(data);
-  } catch (err) {
-    console.error('Dashboard load error:', err);
-  }
+  renderDashboard(Store.stats());
 }
 
 function renderDashboard(data) {
