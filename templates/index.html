@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Scan Field{% endblock %}
+
+{% block content %}
+<div class="animate-fadein">
+
+  <!-- ═══ ONE-Style Hero Banner & Quick Actions ═══ -->
+  <section class="one-hero-box" style="margin-bottom:24px;">
+    <div class="hero-tag">
+      <span>🌿</span>
+      <span data-en="UN SDG 2: Zero Hunger &bull; 42-Class MobileNetV2 Transfer Learning" data-ta="ஐ.நா SDG 2: பசியின்மை ஒழிப்பு &bull; 42-வகை MobileNetV2 AI">
+        UN SDG 2: Zero Hunger &bull; 42-Class MobileNetV2 Transfer Learning
+      </span>
+    </div>
+
+    <h1 class="hero-title">
+      <span data-en="Your Crops," data-ta="உங்கள் பயிர்கள்,">Your Crops,</span>
+      <span class="cursive-accent" data-en="softly tracked" data-ta="மென்மையாக கண்காணிக்கப்படும்">softly tracked</span>
+    </h1>
+
+    <p class="hero-desc" data-en="Upload a leaf specimen or try a sample below to diagnose 42 crop diseases across 17 crop species, get bilingual organic & chemical remedies, calculate exact spray dosages, and log field notes."
+       data-ta="17 பயிர் இனங்களில் 42 பயிர் நோய்களைக் கண்டறிய இலை புகைப்படத்தை பதிவேற்றவும் அல்லது கீழே உள்ள மாதிரி இலையை முயற்சிக்கவும். இயற்கை மற்றும் வேதியியல் தீர்வுகளைப் பெறுங்கள்.">
+      Upload a leaf specimen or try a sample below to diagnose 42 crop diseases across 17 crop species, get bilingual organic &amp; chemical remedies, calculate exact spray dosages, and log field notes.
+    </p>
+
+    <!-- Quick Action Pills (Exact ONE Reference) -->
+    <div class="quick-actions-row">
+      <button type="button" class="pill-action primary-pill" onclick="document.getElementById('file-input').click()">
+        <span>📷</span>
+        <span data-en="Upload Leaf Photo" data-ta="இலை படம் பதிவேற்று">Upload Leaf Photo</span>
+      </button>
+      <a href="/encyclopedia" class="pill-action">
+        <span>📖</span>
+        <span data-en="42-Class Field Guide" data-ta="42-நோய் கள வழிகாட்டி">42-Class Field Guide</span>
+      </a>
+      <a href="/model" class="pill-action">
+        <span>🧠</span>
+        <span data-en="AI Model & Logbook" data-ta="AI மாதிரி & பதிவேடு">AI Model &amp; Logbook</span>
+      </a>
+      <a href="/tools" class="pill-action">
+        <span>🧮</span>
+        <span data-en="Dosage Calculator & Notes" data-ta="மருந்து அளவு கணிப்பான்">Dosage Calculator &amp; Notes</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══ Interactive Leaf Scanner Card ═══ -->
+  <section style="margin-bottom:24px;">
+    <div class="section-header-row">
+      <h2 class="section-circle-title">
+        <span class="circle-dot">◯</span>
+        <span data-en="New Leaf Specimen Scan" data-ta="புதிய இலை மாதிரி ஸ்கேன்">New Leaf Specimen Scan</span>
+      </h2>
+      <span style="font-size:0.78rem;color:var(--text-muted);font-family:var(--font-mono);" data-en="Supports JPG, PNG, WEBP &bull; Mobile Camera Ready" data-ta="JPG, PNG, WEBP &bull; மொபைல் கேமரா தயார்">
+        Supports JPG, PNG, WEBP &bull; Mobile Camera Ready
+      </span>
+    </div>
+
+    <div class="card upload-card">
+      <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" hidden>
+      <input type="file" id="camera-input" accept="image/*" capture="environment" hidden>
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="drop-zone">
+        <div class="drop-icon">🍃</div>
+        <div class="drop-title" data-en="Drop a leaf photograph into your archive" data-ta="இலை புகைப்படத்தை இங்கே இழுத்து விடவும்">
+          Drop a leaf photograph into your archive
+        </div>
+        <div class="drop-sub" data-en="Clear close-up of the affected leaf surface gives the highest MobileNetV2 accuracy" data-ta="பாதிக்கப்பட்ட இலையின் தெளிவான புகைப்படம் துல்லியமான முடிவைத் தரும்">
+          Clear close-up of the affected leaf surface gives the highest MobileNetV2 accuracy
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); document.getElementById('file-input').click();">
+            📁 <span data-en="Browse Files" data-ta="கோப்புகளைத் தேர்ந்தெடு">Browse Files</span>
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="event.stopPropagation(); document.getElementById('camera-input').click();">
+            📷 <span data-en="Take Camera Photo" data-ta="கேமரா புகைப்படம்">Take Camera Photo</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Image Preview -->
+      <div class="preview-wrap" id="preview-wrap">
+        <img id="preview-img" src="" alt="Leaf preview">
+        <button class="preview-remove" id="preview-remove" title="Remove image">&times;</button>
+      </div>
+
+      <!-- Loading Spinner -->
+      <div class="scan-loader" id="scan-loader">
+        <div class="spinner"></div>
+        <div style="font-weight:600;color:var(--accent-primary);font-family:var(--font-serif);font-size:1.05rem;" data-en="Analyzing leaf venation & lesion patterns with MobileNetV2..." data-ta="MobileNetV2 மூலம் இலை நரம்புகள் மற்றும் புள்ளிகள் ஆராயப்படுகின்றன...">
+          Analyzing leaf venation &amp; lesion patterns with MobileNetV2...
+        </div>
+        <div style="font-size:0.78rem;color:var(--text-muted);" data-en="Comparing against 42 crop pathology classes & bilingual treatment archive" data-ta="42 பயிர் நோய் வகைகளுடன் ஒப்பிடப்படுகிறது">
+          Comparing against 42 crop pathology classes &amp; bilingual treatment archive
+        </div>
+      </div>
+
+      <!-- Scan Button -->
+      <button class="btn btn-primary btn-full" id="scan-btn" style="margin-top:18px;" disabled>
+        <span>🔬</span>
+        <span data-en="Diagnose Leaf & Save to Archive" data-ta="இலையைக் கண்டறிந்து காப்பகத்தில் சேமி">Diagnose Leaf &amp; Save to Archive</span>
+      </button>
+
+      <!-- 1-Click Sample Leaf Specimen Bar -->
+      <div style="margin-top:22px;padding-top:18px;border-top:1px dashed var(--border-dashed);text-align:left;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <span style="font-size:0.82rem;font-weight:600;color:var(--text-secondary);" data-en="✨ No leaf photo handy? Click a sample specimen below for an instant live diagnosis:" data-ta="✨ இலை புகைப்படம் இல்லையா? உடனடி பரிசோதனைக்கு கீழே உள்ள மாதிரி இலையை அழுத்தவும்:">
+            ✨ No leaf photo handy? Click a sample specimen below for an instant live diagnosis:
+          </span>
+          <span style="font-size:0.72rem;color:var(--text-muted);font-family:var(--font-mono);" data-en="1-Click Live Inference" data-ta="1-கிளிக் நேரடி சோதனை">1-Click Live Inference</span>
+        </div>
+
+        <div class="specimen-grid">
+          <div class="specimen-card" onclick="runSampleScan('tomato_blight')">
+            <img src="/static/img/samples/sample_tomato_blight.jpg" alt="Tomato Early Blight" class="specimen-thumb">
+            <div class="specimen-title" data-en="Tomato Early Blight" data-ta="தக்காளி ஆரம்ப கருகல்">Tomato Early Blight</div>
+            <div class="specimen-crop">🍅 Solanum</div>
+          </div>
+          <div class="specimen-card" onclick="runSampleScan('potato_late')">
+            <img src="/static/img/samples/sample_potato_late.jpg" alt="Potato Late Blight" class="specimen-thumb">
+            <div class="specimen-title" data-en="Potato Late Blight" data-ta="உருளை தாமதக் கருகல்">Potato Late Blight</div>
+            <div class="specimen-crop">🥔 Tuberosum</div>
+          </div>
+          <div class="specimen-card" onclick="runSampleScan('rice_blast')">
+            <img src="/static/img/samples/sample_rice_blast.jpg" alt="Rice Leaf Blast" class="specimen-thumb">
+            <div class="specimen-title" data-en="Rice Leaf Blast" data-ta="நெல் குலை நோய்">Rice Leaf Blast</div>
+            <div class="specimen-crop">🌾 Oryza sativa</div>
+          </div>
+          <div class="specimen-card" onclick="runSampleScan('healthy_apple')">
+            <img src="/static/img/samples/sample_healthy_apple.jpg" alt="Healthy Apple" class="specimen-thumb">
+            <div class="specimen-title" data-en="Healthy Apple Leaf" data-ta="ஆரோக்கிய ஆப்பிள்">Healthy Apple Leaf</div>
+            <div class="specimen-crop">🍎 Malus</div>
+          </div>
+          <div class="specimen-card" onclick="runSampleScan('corn_rust')">
+            <img src="/static/img/samples/sample_corn_rust.jpg" alt="Corn Rust" class="specimen-thumb">
+            <div class="specimen-title" data-en="Corn Common Rust" data-ta="மக்காச்சோள துரு">Corn Common Rust</div>
+            <div class="specimen-crop">🌽 Zea mays</div>
+          </div>
+          <div class="specimen-card" onclick="runSampleScan('grape_rot')">
+            <img src="/static/img/samples/sample_grape_rot.jpg" alt="Grape Black Rot" class="specimen-thumb">
+            <div class="specimen-title" data-en="Grape Black Rot" data-ta="திராட்சை அழுகல்">Grape Black Rot</div>
+            <div class="specimen-crop">🍇 Vitis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ ONE-Style Overview Stat Cards (4-Column Grid) ═══ -->
+  <section style="margin-bottom:28px;">
+    <div class="section-header-row">
+      <h2 class="section-circle-title">
+        <span class="circle-dot">◯</span>
+        <span data-en="Archive Overview" data-ta="காப்பக சுருக்கம்">Archive Overview</span>
+      </h2>
+    </div>
+
+    <div class="stats-grid">
+      <a href="/history" class="card stat-card" style="text-decoration:none;">
+        <div class="stat-icon-box" style="background-color: rgba(139, 159, 126, 0.2); color: #6b7f5e;">🌿</div>
+        <div class="stat-info">
+          <div class="stat-value" id="home-stat-scans">0</div>
+          <div class="stat-label" data-en="Your Logged Scans" data-ta="உங்கள் ஸ்கேன்கள்">Your Logged Scans</div>
+        </div>
+      </a>
+
+      <a href="/encyclopedia" class="card stat-card" style="text-decoration:none;">
+        <div class="stat-icon-box" style="background-color: rgba(196, 167, 125, 0.22); color: #9c7a44;">📖</div>
+        <div class="stat-info">
+          <div class="stat-value" id="home-stat-classes">42</div>
+          <div class="stat-label" data-en="SQLite Disease Classes" data-ta="SQLite நோய் வகைகள்">SQLite Disease Classes</div>
+        </div>
+      </a>
+
+      <a href="/model" class="card stat-card" style="text-decoration:none;">
+        <div class="stat-icon-box" style="background-color: rgba(199, 91, 59, 0.16); color: #c75b3b;">🧠</div>
+        <div class="stat-info">
+          <div class="stat-value">94.2%</div>
+          <div class="stat-label" data-en="MobileNetV2 Accuracy" data-ta="MobileNetV2 துல்லியம்">MobileNetV2 Accuracy</div>
+        </div>
+      </a>
+
+      <a href="/tools" class="card stat-card" style="text-decoration:none;">
+        <div class="stat-icon-box" style="background-color: rgba(138, 115, 94, 0.2); color: #8a735e;">🌾</div>
+        <div class="stat-info">
+          <div class="stat-value" id="home-stat-crops">17</div>
+          <div class="stat-label" data-en="Supported Crop Species" data-ta="ஆதரிக்கப்படும் பயிர்கள்">Supported Crop Species</div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- ═══ Recently Added Scans Preview ═══ -->
+  <section>
+    <div class="section-header-row">
+      <h2 class="section-circle-title">
+        <span class="circle-dot">◯</span>
+        <span data-en="Recently Scanned Specimens" data-ta="சமீபத்தில் ஸ்கேன் செய்யப்பட்டவை">Recently Scanned Specimens</span>
+      </h2>
+      <a href="/history" style="font-size:0.82rem;color:var(--accent-primary);text-decoration:none;font-weight:600;" data-en="View Full Archive →" data-ta="முழு காப்பகத்தைக் காண்க →">
+        View Full Archive →
+      </a>
+    </div>
+
+    <div id="recent-scans-preview" class="grid-3">
+      <!-- Populated dynamically via scan.js -->
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/scan.js"></script>
+{% endblock %}

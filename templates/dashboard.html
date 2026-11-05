@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Field Insights{% endblock %}
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+
+<div class="animate-fadein">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px;">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+        <p class="section-label" id="lbl-dash-label" data-en="EPIDEMIOLOGICAL MONITORING" data-ta="நோய் கண்காணிப்பு">EPIDEMIOLOGICAL MONITORING</p>
+        <span class="handwritten-stamp" style="font-size:1.1rem;">Field Analytics</span>
+      </div>
+      <h1 class="editorial-title" id="dash-title" data-en="Pathology Insights" data-ta="நோய் நுண்ணறிவு">Pathology Insights</h1>
+    </div>
+    <div class="badge-shimmer">
+      <span>📊</span>
+      <span id="scan-count-badge" style="font-family:var(--font-mono);">Evaluating Archive...</span>
+    </div>
+  </div>
+
+  <!-- Stat summary cards -->
+  <div class="grid-4" style="margin-bottom:24px;" id="dash-stats">
+    <div class="cozy-card stat-card">
+      <div class="stat-value" id="d-total">-</div>
+      <div class="stat-label" id="lbl-d-total" data-en="Total Examinations" data-ta="மொத்த ஆய்வுகள்">Total Examinations</div>
+    </div>
+    <div class="cozy-card stat-card">
+      <div class="stat-value" style="color:var(--accent-critical);" id="d-critical">-</div>
+      <div class="stat-label" id="lbl-d-crit" data-en="Critical Severity" data-ta="மிகவும் கடுமையானது">Critical Severity</div>
+    </div>
+    <div class="cozy-card stat-card">
+      <div class="stat-value" style="color:var(--accent-amber);" id="d-moderate">-</div>
+      <div class="stat-label" id="lbl-d-mod" data-en="Moderate Risk" data-ta="மிதமான ஆபத்து">Moderate Risk</div>
+    </div>
+    <div class="cozy-card stat-card">
+      <div class="stat-value" style="color:var(--accent-primary);" id="d-healthy">-</div>
+      <div class="stat-label" id="lbl-d-hlth" data-en="Healthy Specimens" data-ta="ஆரோக்கியமானவை">Healthy Specimens</div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="grid-2" style="margin-bottom:24px;">
+
+    <!-- Bar chart: Top diseases -->
+    <div class="cozy-card" style="padding:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <p class="section-label" id="lbl-top-dis" data-en="MOST PREVALENT PATHOLOGIES" data-ta="மிகவும் பரவலான நோய்கள்">MOST PREVALENT PATHOLOGIES</p>
+        <span class="font-cursive" style="color:var(--text-muted);font-size:1.05rem;">Frequency</span>
+      </div>
+      <h3 class="font-serif" style="font-size:1.15rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);" id="lbl-top-sub" data-en="Frequency of detections across field scans" data-ta="கள ஸ்கேன்களில் கண்டறிதல் அதிர்வெண்">Frequency of detections across field scans</h3>
+      <div style="position:relative;height:260px;">
+        <canvas id="barChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Doughnut: Severity -->
+    <div class="cozy-card" style="padding:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+        <p class="section-label" id="lbl-sev-dist" data-en="PATHOLOGICAL SEVERITY SPREAD" data-ta="நோயியல் தீவிர பரவல்">PATHOLOGICAL SEVERITY SPREAD</p>
+        <span class="font-cursive" style="color:var(--text-muted);font-size:1.05rem;">Health Triage</span>
+      </div>
+      <h3 class="font-serif" style="font-size:1.15rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);" id="lbl-sev-sub" data-en="Proportion of healthy vs diseased crops" data-ta="ஆரோக்கியமான மற்றும் நோய்வாய்ப்பட்ட பயிர்களின் விகிதம்">Proportion of healthy vs diseased crops</h3>
+      <div style="position:relative;height:260px;display:flex;align-items:center;justify-content:center;">
+        <canvas id="donutChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top disease ranked list -->
+  <div class="cozy-card" style="padding:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <p class="section-label" id="lbl-dis-list" data-en="DETAILED PATHOLOGY DISTRIBUTION" data-ta="விரிவான நோய் விநியோகம்">DETAILED PATHOLOGY DISTRIBUTION</p>
+      <span class="font-cursive" style="color:var(--text-muted);font-size:1.05rem;">All Scanned Species</span>
+    </div>
+    <div id="disease-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+  </div>
+
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

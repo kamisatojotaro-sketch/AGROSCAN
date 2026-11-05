@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% block title %}Farm Tools & Field Journal{% endblock %}
+
+{% block content %}
+<div class="animate-fadein">
+  <!-- Header -->
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div>
+      <div class="section-tag">
+        <span>🧮</span>
+        <span data-en="AGRONOMY CALCULATORS & FIELD JOURNAL" data-ta="வேளாண் கணிப்பான்கள் மற்றும் கள நாட்குறிப்பு">AGRONOMY CALCULATORS &amp; FIELD JOURNAL</span>
+      </div>
+      <h1 style="font-family:var(--font-serif);font-size:1.85rem;font-weight:700;" data-en="Precision Farm Tools & Field Notes" data-ta="பண்ணை கருவிகள் மற்றும் கள குறிப்புகள்">
+        Precision Farm Tools &amp; Field Notes
+      </h1>
+    </div>
+  </div>
+
+  <!-- Top 2-Column Grid: Spray Dosage Calculator + Weather Disease Risk Simulator -->
+  <div class="grid-2" style="margin-bottom:28px;">
+    <!-- 1. Spray & Bio-Input Dosage Calculator -->
+    <div class="card" style="padding:24px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <span style="font-size:1.6rem;">🚿</span>
+        <div>
+          <h2 style="font-family:var(--font-serif);font-size:1.25rem;font-weight:700;" data-en="Spray & Fungicide Dosage Calculator" data-ta="மருந்து மற்றும் தெளிப்பு அளவு கணிப்பான்">
+            Spray &amp; Fungicide Dosage Calculator
+          </h2>
+          <p style="font-size:0.78rem;color:var(--text-muted);" data-en="Calculate exact tank mixes and water volume for your plot size" data-ta="உங்கள் நில அளவிற்கு ஏற்ப துல்லியமான மருந்து மற்றும் தண்ணீர் அளவு">
+            Calculate exact tank mixes and water volume for your plot size
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <label style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;" data-en="Select Treatment Input:" data-ta="மருந்து / இயற்கை இடுபொருளைத் தேர்ந்தெடுக்கவும்:">
+            Select Treatment Input:
+          </label>
+          <select id="calc-product" class="chat-input" style="width:100%;" onchange="calculateDosage()">
+            <option value="neem">🌿 Organic Neem Oil 10,000 ppm (5 ml / Liter)</option>
+            <option value="trichoderma">🦠 Pseudomonas / Trichoderma Bio-Fungicide (5 g / Liter)</option>
+            <option value="mancozeb">🧪 Mancozeb 75% WP Contact Fungicide (2.5 g / Liter)</option>
+            <option value="copper">🧪 Copper Oxychloride 50% WP (3 g / Liter)</option>
+            <option value="tricyclazole">🌾 Tricyclazole 75% WP for Rice Blast (0.6 g / Liter)</option>
+            <option value="imidacloprid">🦟 Imidacloprid 17.8% SL Vector Control (0.5 ml / Liter)</option>
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;" data-en="Field Area:" data-ta="நிலத்தின் பரப்பளவு:">
+              Field Area:
+            </label>
+            <input type="number" id="calc-area" class="chat-input" style="width:100%;" value="2" min="0.1" max="500" step="0.5" oninput="calculateDosage()">
+          </div>
+          <div>
+            <label style="font-size:0.78rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;" data-en="Unit:" data-ta="அலகு:">
+              Unit:
+            </label>
+            <select id="calc-unit" class="chat-input" style="width:100%;" onchange="calculateDosage()">
+              <option value="acre">Acres (ஏக்கர்)</option>
+              <option value="hectare">Hectares (ஹெக்டேர்)</option>
+              <option value="cent">Cents (சென்ட்)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Output Card -->
+        <div style="padding:16px;border-radius:14px;background:var(--bg-base);border:1px solid var(--border-default);margin-top:4px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center;">
+            <div style="padding:10px;background:var(--bg-surface);border-radius:10px;border:1px solid var(--border-subtle);">
+              <div style="font-size:0.7rem;color:var(--text-muted);font-family:var(--font-mono);" data-en="TOTAL INPUT" data-ta="மொத்த மருந்து">TOTAL INPUT</div>
+              <div style="font-size:1.15rem;font-weight:700;color:var(--accent-primary);font-family:var(--font-serif);margin-top:2px;" id="res-total-dose">2,000 ml</div>
+            </div>
+            <div style="padding:10px;background:var(--bg-surface);border-radius:10px;border:1px solid var(--border-subtle);">
+              <div style="font-size:0.7rem;color:var(--text-muted);font-family:var(--font-mono);" data-en="WATER VOLUME" data-ta="தண்ணீர் அளவு">WATER VOLUME</div>
+              <div style="font-size:1.15rem;font-weight:700;color:var(--text-primary);font-family:var(--font-serif);margin-top:2px;" id="res-water-vol">400 L</div>
+            </div>
+            <div style="padding:10px;background:var(--bg-surface);border-radius:10px;border:1px solid var(--border-subtle);">
+              <div style="font-size:0.7rem;color:var(--text-muted);font-family:var(--font-mono);" data-en="15L TANKS" data-ta="15L டேங்குகள்">15L TANKS</div>
+              <div style="font-size:1.15rem;font-weight:700;color:var(--accent-secondary);font-family:var(--font-serif);margin-top:2px;" id="res-tank-count">27 Tanks</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;font-size:0.82rem;color:var(--text-secondary);line-height:1.5;" id="res-per-tank-note">
+            Mix <strong>75 ml</strong> per 15-Liter knapsack sprayer tank + 5 ml sticky wetting agent.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Micro-Climate Weather Disease Risk Simulator -->
+    <div class="card" style="padding:24px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <span style="font-size:1.6rem;">🌦️</span>
+        <div>
+          <h2 style="font-family:var(--font-serif);font-size:1.25rem;font-weight:700;" data-en="Micro-Climate Outbreak Risk Simulator" data-ta="வானிலை நோய் ஆபத்து கணிப்பான்">
+            Micro-Climate Outbreak Risk Simulator
+          </h2>
+          <p style="font-size:0.78rem;color:var(--text-muted);" data-en="Simulate fungal, bacterial, and viral vector risk from field temperature & humidity" data-ta="வெப்பநிலை மற்றும் ஈரப்பதத்தைக் கொண்டு நோய் அபாயத்தைக் கணிக்கவும்">
+            Simulate fungal, bacterial, and viral vector risk from field temperature &amp; humidity
+          </p>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:600;margin-bottom:4px;">
+            <span data-en="Field Temperature (°C)" data-ta="வயல் வெப்பநிலை (°C)">Field Temperature (°C)</span>
+            <span id="temp-val-label" style="font-family:var(--font-mono);color:var(--accent-primary);">22°C</span>
+          </div>
+          <input type="range" id="sim-temp" min="10" max="42" value="22" style="width:100%;accent-color:var(--accent-primary);" oninput="updateWeatherSim()">
+        </div>
+
+        <div>
+          <div style="display:flex;justify-content:space-between;font-size:0.82rem;font-weight:600;margin-bottom:4px;">
+            <span data-en="Relative Humidity (%)" data-ta="ஈரப்பதம் (%)">Relative Humidity (%)</span>
+            <span id="hum-val-label" style="font-family:var(--font-mono);color:var(--accent-primary);">88%</span>
+          </div>
+          <input type="range" id="sim-hum" min="30" max="100" value="88" style="width:100%;accent-color:var(--accent-primary);" oninput="updateWeatherSim()">
+        </div>
+
+        <div id="weather-risk-box" style="padding:16px;border-radius:14px;background:var(--bg-base);border:1px solid var(--border-default);">
+          <!-- Populated by updateWeatherSim() -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Farmer Field Journal (SQLite `field_notes` Table) -->
+  <section>
+    <div class="section-header-row">
+      <h2 class="section-circle-title">
+        <span class="circle-dot">◯</span>
+        <span data-en="Farmer Field Notes Journal (SQLite)" data-ta="விவசாயி கள குறிப்பேடு (SQLite)">Farmer Field Notes Journal (SQLite)</span>
+      </h2>
+      <span style="font-size:0.78rem;color:var(--text-muted);font-family:var(--font-mono);" data-en="Log spray dates, seed lots, & plot observations" data-ta="தெளிப்பு தேதிகள் மற்றும் குறிப்புகளை சேமிக்கவும்">
+        Log spray dates, seed lots, &amp; plot observations
+      </span>
+    </div>
+
+    <!-- Add Note Form -->
+    <div class="card" style="padding:20px;margin-bottom:20px;">
+      <form id="note-form" style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
+          <input type="text" id="note-title" class="chat-input" required
+                 data-en="Note title (e.g., Sprayed Neem Oil on North Tomato Plot)..."
+                 data-ta="குறிப்பு தலைப்பு (எ.கா. வடக்கு தக்காளி தோட்டத்தில் வேப்பெண்ணெய் தெளிக்கப்பட்டது)..."
+                 placeholder="Note title (e.g., Sprayed Neem Oil on North Tomato Plot)...">
+          <input type="text" id="note-crop" class="chat-input"
+                 data-en="Crop / Plot tag (e.g., Tomato, Rice)"
+                 data-ta="பயிர் பெயர் (எ.கா. தக்காளி, நெல்)"
+                 placeholder="Crop / Plot tag (e.g., Tomato, Rice)">
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <textarea id="note-content" class="chat-input" rows="2" style="flex:1;resize:vertical;" required
+                    data-en="Write your field observation, fertilizer schedule, or weather note..."
+                    data-ta="உங்கள் வயல் குறிப்பு அல்லது உர அட்டவணையை எழுதவும்..."
+                    placeholder="Write your field observation, fertilizer schedule, or weather note..."></textarea>
+          <button type="submit" class="btn btn-primary" style="white-space:nowrap;">
+            + <span data-en="Save Note" data-ta="குறிப்பைச் சேமி">Save Note</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Notes Grid -->
+    <div class="grid-2" id="notes-grid"></div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const PRODUCTS = {
+  neem: { rate: 5, unit: "ml", name: "Neem Oil (10,000 ppm)" },
+  trichoderma: { rate: 5, unit: "g", name: "Pseudomonas / Trichoderma" },
+  mancozeb: { rate: 2.5, unit: "g", name: "Mancozeb 75% WP" },
+  copper: { rate: 3, unit: "g", name: "Copper Oxychloride 50% WP" },
+  tricyclazole: { rate: 0.6, unit: "g", name: "Tricyclazole 75% WP" },
+  imidacloprid: { rate: 0.5, unit: "ml", name: "Imidacloprid 17.8% SL" }
+};
+
+function calculateDosage() {
+  const prodKey = document.getElementById("calc-product").value;
+  const area = Math.max(parseFloat(document.getElementById("calc-area").value) || 1, 0.1);
+  const unit = document.getElementById("calc-unit").value;
+  const prod = PRODUCTS[prodKey] || PRODUCTS.neem;
+
+  // Convert area to acres (1 Hectare = 2.471 Acres, 100 Cents = 1 Acre)
+  let acres = area;
+  if (unit === "hectare") acres = area * 2.471;
+  if (unit === "cent") acres = area / 100.0;
+
+  const waterLiters = Math.max(15, Math.round(acres * 200));
+  const tanks = Math.max(1, Math.round(waterLiters / 15));
+  const totalDose = Math.round(waterLiters * prod.rate);
+  const perTankDose = (15 * prod.rate).toFixed(1).replace(/\.0$/, "");
+
+  document.getElementById("res-total-dose").textContent = `${totalDose.toLocaleString()} ${prod.unit}`;
+  document.getElementById("res-water-vol").textContent = `${waterLiters.toLocaleString()} L`;
+  document.getElementById("res-tank-count").textContent = `${tanks} Tanks`;
+
+  const noteEl = document.getElementById("res-per-tank-note");
+  if (currentLang === "ta") {
+    noteEl.innerHTML = `15-லிட்டர் தெளிப்பான் டேங்கிற்கு <strong>${perTankDose} ${prod.unit}</strong> ${prod.name} + 5 மி.லி ஒட்டும் திரவம் கலக்கவும்.`;
+  } else {
+    noteEl.innerHTML = `Mix <strong>${perTankDose} ${prod.unit}</strong> of ${prod.name} per 15-Liter knapsack sprayer tank + 5 ml wetting agent.`;
+  }
+}
+
+function updateWeatherSim() {
+  const temp = parseInt(document.getElementById("sim-temp").value, 10);
+  const hum = parseInt(document.getElementById("sim-hum").value, 10);
+  document.getElementById("temp-val-label").textContent = `${temp}°C`;
+  document.getElementById("hum-val-label").textContent = `${hum}%`;
+
+  const box = document.getElementById("weather-risk-box");
+  let level = "moderate";
+  let title = "";
+  let advice = "";
+  let diseases = "";
+
+  if (hum >= 82 && temp >= 14 && temp <= 26) {
+    level = "critical";
+    title = currentLang === "ta" ? "🚨 அதி தீவிர பூஞ்சை மற்றும் கருகல் நோய் அபாயம்!" : "🚨 CRITICAL Fungal Blight & Blast Outbreak Risk!";
+    diseases = "Potato Late Blight, Rice Leaf Blast, Apple Scab, Grape Downy/Black Rot";
+    advice = currentLang === "ta"
+      ? "இலைகளில் ஈரப்பதம் அதிகமாக உள்ளது. மேல்வழி நீர்ப்பாசனத்தை நிறுத்திவிட்டு, தடுப்பு மருந்தாக Mancozeb (2.5 கி/லி) அல்லது வேப்பெண்ணெய் தெளிக்கவும்."
+      : "High humidity + cool-moderate temperature triggers rapid sporangia germination within 6 hours. Avoid overhead irrigation and apply preventive Copper/Mancozeb or Trichoderma spray.";
+  } else if (temp >= 30 && hum < 60) {
+    level = "high";
+    title = currentLang === "ta" ? "🔴 வெள்ளை ஈ மற்றும் சிலந்திப் பேன் (வைரஸ்) அபாயம்" : "🔴 HIGH Whitefly, Mite & Viral Vector Risk";
+    diseases = "Tomato Yellow Leaf Curl Virus (TYLCV), Cotton Leaf Curl, Two-Spotted Spider Mites";
+    advice = currentLang === "ta"
+      ? "வெப்பமான மற்றும் வறண்ட வானிலையில் வெள்ளை ஈக்கள் வேகமாகப் பெருகும். ஏக்கருக்கு 12 மஞ்சள் ஒட்டும் பொறிகளை வைக்கவும்."
+      : "Hot, dry weather accelerates whitefly and spider mite reproduction. Install 12 yellow sticky traps/acre and spray Neem Oil (5 ml/L) under leaf surfaces.";
+  } else if (hum >= 75 && temp > 26) {
+    level = "high";
+    title = currentLang === "ta" ? "⚠️ பாக்டீரியா இலைப்புள்ளி மற்றும் ஆரம்ப கருகல் அபாயம்" : "⚠️ HIGH Bacterial Spot & Early Blight Risk";
+    diseases = "Tomato Early Blight, Rice Bacterial Leaf Blight, Bell Pepper Bacterial Spot, Corn Rust";
+    advice = currentLang === "ta"
+      ? "அடிப்பகுதி இலைகளை கவாத்து செய்து காற்றோட்டத்தை அதிகரிக்கவும். தழைச்சத்து (யூரியா) அதிகமாக இட வேண்டாம்."
+      : "Warm humid canopy favors Alternaria and Xanthomonas spread. Prune lower leaves for airflow and avoid excess nitrogen top-dressing.";
+  } else {
+    level = "none";
+    title = currentLang === "ta" ? "✅ சாதகமான வானிலை — குறைந்த நோய் அபாயம்" : "✅ Favorable Micro-Climate — Low Pathogen Pressure";
+    diseases = "Low immediate outbreak risk across major crops";
+    advice = currentLang === "ta"
+      ? "பயிர் வளர்ச்சிக்கு ஏற்ற வானிலை. வழக்கமான கள கண்காணிப்பு மற்றும் சமச்சீர் உர நிர்வாகத்தைத் தொடரவும்."
+      : "Ideal conditions for healthy photosynthesis. Maintain routine weekly scouting and balanced soil nutrition.";
+  }
+
+  box.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-weight:700;font-size:0.9rem;color:var(--text-primary);">${title}</span>
+      ${getSeverityBadge(level, currentLang)}
+    </div>
+    <div style="font-size:0.76rem;font-family:var(--font-mono);color:var(--accent-primary);margin-bottom:6px;">
+      🎯 Vulnerable: ${diseases}
+    </div>
+    <p style="font-size:0.82rem;color:var(--text-secondary);line-height:1.5;">${advice}</p>
+  `;
+}
+
+let notesList = [];
+async function loadNotes() {
+  try {
+    const res = await fetch("/api/notes");
+    notesList = await res.json();
+    renderNotes();
+  } catch (e) {
+    console.warn("Could not load notes:", e);
+  }
+}
+
+function renderNotes() {
+  const grid = document.getElementById("notes-grid");
+  if (!grid) return;
+  if (!notesList.length) {
+    grid.innerHTML = `<div class="card empty-state" style="grid-column:1/-1;"><p>No field notes yet. Add your first note above!</p></div>`;
+    return;
+  }
+  grid.innerHTML = notesList.map(n => `
+    <div class="card" style="padding:18px;display:flex;flex-direction:column;gap:8px;${n.is_pinned ? 'border-color:var(--accent-primary);' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:0.72rem;font-family:var(--font-mono);padding:2px 8px;border-radius:6px;background:var(--bg-elevated);color:var(--text-secondary);">
+          🌾 ${n.crop || "General"}
+        </span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:0.74rem;" onclick="togglePinNote('${n.id}')">
+            ${n.is_pinned ? "📌 Pinned" : "📍 Pin"}
+          </button>
+          <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:0.74rem;" onclick="deleteNote('${n.id}')">✕</button>
+        </div>
+      </div>
+      <h3 style="font-family:var(--font-serif);font-size:1.05rem;font-weight:700;">${n.title}</h3>
+      <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.55;">${n.content}</p>
+      <div style="margin-top:auto;padding-top:8px;font-size:0.72rem;font-family:var(--font-mono);color:var(--text-muted);">
+        ${formatDate(n.created_at)}
+      </div>
+    </div>
+  `).join("");
+}
+
+async function togglePinNote(id) {
+  await fetch(`/api/notes/${id}/pin`, { method: "POST" });
+  loadNotes();
+}
+
+async function deleteNote(id) {
+  await fetch(`/api/notes/${id}`, { method: "DELETE" });
+  loadNotes();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  calculateDosage();
+  updateWeatherSim();
+  loadNotes();
+
+  document.getElementById("note-form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const title = document.getElementById("note-title").value.trim();
+    const crop = document.getElementById("note-crop").value.trim() || "General";
+    const content = document.getElementById("note-content").value.trim();
+    if (!title || !content) return;
+
+    const res = await fetch("/api/notes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, crop, content })
+    });
+    if (res.ok) {
+      document.getElementById("note-title").value = "";
+      document.getElementById("note-crop").value = "";
+      document.getElementById("note-content").value = "";
+      showToast(currentLang === "ta" ? "கள குறிப்பு சேமிக்கப்பட்டது!" : "Field note saved to SQLite!", "success");
+      loadNotes();
+    }
+  });
+
+  window.addEventListener("langchange", () => {
+    calculateDosage();
+    updateWeatherSim();
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Field Guide & Encyclopedia{% endblock %}
+
+{% block content %}
+<div class="animate-fadein">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+    <div>
+      <div class="section-tag">
+        <span>📖</span>
+        <span data-en="SQLITE PLANT PATHOLOGY ARCHIVE" data-ta="SQLITE தாவர நோயியல் களஞ்சியம்">SQLITE PLANT PATHOLOGY ARCHIVE</span>
+      </div>
+      <h1 style="font-family:var(--font-serif);font-size:1.85rem;font-weight:700;" data-en="42-Class Crop Disease Encyclopedia" data-ta="42-வகை பயிர் நோய் களஞ்சியம்">
+        42-Class Crop Disease Encyclopedia
+      </h1>
+    </div>
+    <span style="font-size:0.8rem;font-family:var(--font-mono);color:var(--text-muted);" id="ency-count-label">
+      Showing 42 / 42 classes
+    </span>
+  </div>
+
+  <!-- Search + Severity Filter Row -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+    <input type="text" id="ency-search" class="chat-input" style="max-width:380px;"
+           data-en="Search by crop, disease, pathogen, or symptom..."
+           data-ta="பயிர், நோய் அல்லது அறிகுறி மூலம் தேடு..."
+           placeholder="Search by crop, disease, pathogen, or symptom...">
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;" id="sev-filters">
+      <button class="btn btn-primary btn-sm" data-sev="all" data-en="All Severities" data-ta="அனைத்தும்">All Severities</button>
+      <button class="btn btn-outline btn-sm" data-sev="critical" data-en="🚨 Critical" data-ta="🚨 அதி தீவிரம்">🚨 Critical</button>
+      <button class="btn btn-outline btn-sm" data-sev="high" data-en="🔴 High Risk" data-ta="🔴 அதிக ஆபத்து">🔴 High Risk</button>
+      <button class="btn btn-outline btn-sm" data-sev="moderate" data-en="⚠️ Moderate" data-ta="⚠️ மிதமானது">⚠️ Moderate</button>
+      <button class="btn btn-outline btn-sm" data-sev="none" data-en="✅ Healthy" data-ta="✅ ஆரோக்கியமானது">✅ Healthy</button>
+    </div>
+  </div>
+
+  <!-- Crop Species Filter Pills -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px;" id="crop-filters">
+    <!-- Populated dynamically from the 17 crop species in SQLite -->
+  </div>
+
+  <!-- Encyclopedia Cards Grid -->
+  <div class="grid-3" id="ency-grid"></div>
+
+  <!-- Disease Detail Modal -->
+  <div class="modal-backdrop" id="ency-modal">
+    <div class="modal-card">
+      <button class="modal-close" id="modal-close">&times;</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/encyclopedia.js"></script>
+{% endblock %}

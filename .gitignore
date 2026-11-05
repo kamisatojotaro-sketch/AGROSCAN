@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Uploaded user scans (keep folder, ignore dynamic uploads)
+uploads/*
+!uploads/.gitkeep
+
+# Optional large trained model weights (>100MB)
+model/*.h5
+
+# OS & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

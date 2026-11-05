@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AgroScan{% endblock %} — Crop Disease Intelligence & Archive</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+
+  <!-- Google Fonts: Caveat, Inter, JetBrains Mono, Playfair Display (from reference UI) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600;1,700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- Desktop Left Sidebar (Exact ONE Reference Layout) -->
+  <aside class="sidebar-desktop" aria-label="Sidebar Navigation">
+    <a href="/" class="sidebar-brand">
+      <h1 class="sidebar-brand-title">
+        AgroScan<span class="sidebar-brand-dot">.</span>
+      </h1>
+      <p class="sidebar-brand-sub font-cursive">softly tracked</p>
+    </a>
+
+    <nav class="sidebar-nav" id="nav-links">
+      <a href="/" class="sidebar-link" id="nav-home">
+        <span class="sidebar-link-icon">🌿</span>
+        <span data-en="Scan Field" data-ta="புலம் ஸ்கேன்">Scan Field</span>
+      </a>
+      <a href="/history" class="sidebar-link" id="nav-history">
+        <span class="sidebar-link-icon">📋</span>
+        <span data-en="Archive" data-ta="காப்பகம்">Archive</span>
+      </a>
+      <a href="/dashboard" class="sidebar-link" id="nav-dashboard">
+        <span class="sidebar-link-icon">📊</span>
+        <span data-en="Insights" data-ta="நுண்ணறிவு">Insights</span>
+      </a>
+      <a href="/encyclopedia" class="sidebar-link" id="nav-ency">
+        <span class="sidebar-link-icon">📖</span>
+        <span data-en="Field Guide" data-ta="கள வழிகாட்டி">Field Guide</span>
+      </a>
+      <a href="/model" class="sidebar-link" id="nav-model">
+        <span class="sidebar-link-icon">🧠</span>
+        <span data-en="AI & Logbook" data-ta="AI & பதிவேடு">AI & Logbook</span>
+      </a>
+      <a href="/tools" class="sidebar-link" id="nav-tools">
+        <span class="sidebar-link-icon">🧮</span>
+        <span data-en="Farm Tools" data-ta="பண்ணை கருவிகள்">Farm Tools</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <!-- Language Switcher (EN / தமிழ்) -->
+      <div class="sidebar-lang-box">
+        <span class="sidebar-lang-label" data-en="Language" data-ta="மொழி">Language</span>
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="btn-en" onclick="setLang('en')">EN</button>
+          <button class="lang-btn" id="btn-ta" onclick="setLang('ta')">தமிழ்</button>
+        </div>
+      </div>
+
+      <!-- Light/Dark Theme Switcher -->
+      <button class="sidebar-theme-btn" id="theme-toggle-btn" onclick="toggleTheme()">
+        <span id="theme-icon">🌙</span>
+        <span id="theme-label" data-en="Dark Mode" data-ta="இருள் முறை">Dark Mode</span>
+      </button>
+
+      <div class="sidebar-sdg-tag">
+        <span>🌾 UN SDG 2 &bull; Zero Hunger</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Top Header (Hidden on Desktop) -->
+  <header class="mobile-top-header">
+    <a href="/" class="mobile-brand">
+      <span class="mobile-brand-title">AgroScan<span class="sidebar-brand-dot">.</span></span>
+      <span class="font-cursive mobile-brand-sub">softly tracked</span>
+    </a>
+    <div class="nav-controls">
+      <button class="icon-toggle-btn" onclick="toggleTheme()" title="Toggle Theme" aria-label="Toggle Theme">
+        <span id="theme-icon-mobile">🌙</span>
+      </button>
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btn-en-m" onclick="setLang('en')">EN</button>
+        <button class="lang-btn" id="btn-ta-m" onclick="setLang('ta')">தமிழ்</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Main Scrollable Viewport -->
+  <div class="main-scroll-area">
+    <div class="hero-ambient-backdrop"></div>
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+      <p>AgroScan &bull; Personal Crop Health Archive &bull; UN SDG 2: Zero Hunger &bull; 42-Class MobileNetV2 Transfer Learning</p>
+    </footer>
+  </div>
+
+  <!-- Mobile Fixed Bottom Navigation Bar (Exact ONE Reference) -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <div class="mobile-nav-container">
+      <a href="/" class="mobile-nav-item" id="m-nav-home">
+        <span class="mobile-nav-icon">🌿</span>
+        <span class="mobile-nav-label" data-en="Scan" data-ta="ஸ்கேன்">Scan</span>
+      </a>
+      <a href="/history" class="mobile-nav-item" id="m-nav-history">
+        <span class="mobile-nav-icon">📋</span>
+        <span class="mobile-nav-label" data-en="Archive" data-ta="காப்பகம்">Archive</span>
+      </a>
+      <a href="/dashboard" class="mobile-nav-item" id="m-nav-dashboard">
+        <span class="mobile-nav-icon">📊</span>
+        <span class="mobile-nav-label" data-en="Insights" data-ta="நுண்ணறிவு">Insights</span>
+      </a>
+      <a href="/encyclopedia" class="mobile-nav-item" id="m-nav-ency">
+        <span class="mobile-nav-icon">📖</span>
+        <span class="mobile-nav-label" data-en="Guide" data-ta="வழிகாட்டி">Guide</span>
+      </a>
+      <a href="/model" class="mobile-nav-item" id="m-nav-model">
+        <span class="mobile-nav-icon">🧠</span>
+        <span class="mobile-nav-label" data-en="AI Log" data-ta="AI">AI Log</span>
+      </a>
+      <a href="/tools" class="mobile-nav-item" id="m-nav-tools">
+        <span class="mobile-nav-icon">🧮</span>
+        <span class="mobile-nav-label" data-en="Tools" data-ta="கருவிகள்">Tools</span>
+      </a>
+    </div>
+  </nav>
+</div>
+
+<!-- Global JS -->
+<script src="/static/js/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Scan Archive{% endblock %}
+
+{% block content %}
+<div class="animate-fadein">
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div>
+      <div class="section-tag">
+        <span>📋</span>
+        <span data-en="SQLITE SCAN RECORDS" data-ta="SQLITE ஸ்கேன் பதிவுகள்">SQLITE SCAN RECORDS</span>
+      </div>
+      <h1 style="font-family:var(--font-serif);font-size:1.85rem;font-weight:700;" data-en="Personal Crop Scan Archive" data-ta="பயிர் ஸ்கேன் காப்பகம்">
+        Personal Crop Scan Archive
+      </h1>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="/api/export/csv" class="btn btn-outline btn-sm">
+        📥 <span data-en="Export CSV" data-ta="CSV பதிவிறக்கம்">Export CSV</span>
+      </a>
+      <button class="btn btn-outline btn-sm" onclick="clearAllHistory()">
+        🗑️ <span data-en="Clear Archive" data-ta="காப்பகத்தை அழி">Clear Archive</span>
+      </button>
+      <a href="/" class="btn btn-primary btn-sm">
+        <span>+</span>
+        <span data-en="New Scan" data-ta="புதிய ஸ்கேன்">New Scan</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary Stat Cards -->
+  <div class="stats-grid" id="history-stats">
+    <div class="card stat-card">
+      <div class="stat-icon-box" style="background:rgba(107, 127, 94, 0.16);color:var(--accent-primary);">🌿</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-total">0</div>
+        <div class="stat-label" data-en="Total Scans" data-ta="மொத்த ஸ்கேன்கள்">Total Scans</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-icon-box" style="background:rgba(199, 91, 59, 0.16);color:var(--accent-danger);">🚨</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-critical">0</div>
+        <div class="stat-label" data-en="Critical / High" data-ta="அதி தீவிரம்">Critical / High</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-icon-box" style="background:rgba(212, 168, 67, 0.18);color:var(--accent-amber);">⚠️</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-moderate">0</div>
+        <div class="stat-label" data-en="Moderate" data-ta="மிதமானது">Moderate</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-icon-box" style="background:rgba(107, 127, 94, 0.22);color:var(--accent-primary);">✅</div>
+      <div class="stat-info">
+        <div class="stat-value" id="stat-healthy">0</div>
+        <div class="stat-label" data-en="Healthy" data-ta="ஆரோக்கியமானது">Healthy</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Bar -->
+  <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+    <input type="text" id="history-search" class="chat-input" style="max-width:360px;"
+           data-en="Filter archive by crop, disease, ID, or note..."
+           data-ta="பயிர், நோய் அல்லது குறிப்பு மூலம் தேடு..."
+           placeholder="Filter archive by crop, disease, ID, or note...">
+  </div>
+
+  <!-- History Table -->
+  <div class="card history-table-wrap">
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th data-en="Specimen & Crop" data-ta="மாதிரி & பயிர்">Specimen &amp; Crop</th>
+          <th data-en="Date & Time" data-ta="தேதி & நேரம்">Date &amp; Time</th>
+          <th data-en="Confidence" data-ta="நம்பகத்தன்மை">Confidence</th>
+          <th data-en="Severity" data-ta="தீவிரம்">Severity</th>
+          <th data-en="Status & Notes" data-ta="நிலை & குறிப்பு">Status &amp; Notes</th>
+          <th style="text-align:right;" data-en="Actions" data-ta="செயல்கள்">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="history-tbody"></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/history.js"></script>
+{% endblock %}

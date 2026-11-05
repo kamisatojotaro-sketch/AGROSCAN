@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}Diagnosis Result{% endblock %}
+
+{% block content %}
+<div class="animate-fadein">
+  <!-- Top Action Bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div>
+      <div class="section-tag">
+        <span>🔬</span>
+        <span data-en="AI PATHOLOGY REPORT" data-ta="AI நோயியல் அறிக்கை">AI PATHOLOGY REPORT</span>
+      </div>
+      <h1 style="font-family:var(--font-serif);font-size:1.85rem;font-weight:700;" data-en="Leaf Diagnosis & Treatment Plan" data-ta="இலை நோயறிதல் மற்றும் சிகிச்சை திட்டம்">
+        Leaf Diagnosis &amp; Treatment Plan
+      </h1>
+    </div>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-outline btn-sm" id="voice-tts-btn" onclick="speakCurrentResult(this)">
+        🔊 <span data-en="Listen Advisory" data-ta="குரலில் கேட்க">Listen Advisory</span>
+      </button>
+      <a href="/" class="btn btn-outline btn-sm">
+        <span>📷</span>
+        <span data-en="Scan Another Leaf" data-ta="மற்றொரு இலையை ஸ்கேன் செய்">Scan Another Leaf</span>
+      </a>
+      <button class="btn btn-primary btn-sm" id="download-pdf-btn">
+        <span>📄</span>
+        <span data-en="Download PDF Report" data-ta="PDF அறிக்கை பதிவிறக்கம்">Download PDF Report</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main 2-Column Result Grid -->
+  <div class="result-grid">
+    <!-- Left Column: Image + Confidence Ring + Top-5 Probabilities + Scan Notes -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div class="card leaf-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:0.76rem;font-family:var(--font-mono);color:var(--text-muted);" id="res-crop-badge">🌿 Specimen</span>
+          <span style="font-size:0.76rem;font-family:var(--font-mono);color:var(--text-muted);" id="res-scan-id">#----</span>
+        </div>
+        <img id="res-image" class="leaf-img" src="" alt="Scanned leaf">
+
+        <!-- Circular Confidence Gauge -->
+        <div class="conf-ring-wrap">
+          <div class="conf-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle class="conf-ring-bg" cx="40" cy="40" r="32"></circle>
+              <circle class="conf-ring-fill" id="conf-circle" cx="40" cy="40" r="32"
+                      stroke-dasharray="201" stroke-dashoffset="201"></circle>
+            </svg>
+            <div class="conf-ring-text" id="res-confidence">0%</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-family:var(--font-mono);" data-en="Model Confidence" data-ta="மாதிரி நம்பகத்தன்மை">
+              Model Confidence
+            </div>
+            <div style="font-family:var(--font-serif);font-weight:700;font-size:1.02rem;margin-top:2px;" data-en="MobileNetV2 CNN" data-ta="MobileNetV2 CNN">
+              MobileNetV2 CNN
+            </div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;" id="res-timestamp"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top-5 Class Probabilities -->
+      <div class="card" style="padding:20px;">
+        <h3 style="font-size:0.85rem;font-family:var(--font-mono);text-transform:uppercase;color:var(--text-secondary);margin-bottom:14px;"
+            data-en="Top-5 Softmax Probabilities" data-ta="முதல் 5 நிகழ்தகவுகள்">
+          Top-5 Softmax Probabilities
+        </h3>
+        <div id="top5-list"></div>
+      </div>
+
+      <!-- Farmer Scan Status & Field Log (Saved to SQLite) -->
+      <div class="card" style="padding:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <h3 style="font-size:0.9rem;font-family:var(--font-serif);font-weight:700;" data-en="📝 Field Log for This Specimen" data-ta="📝 இந்த இலைக்கான குறிப்பு">
+            📝 Field Log for This Specimen
+          </h3>
+          <select id="scan-status-select" style="padding:5px 10px;border-radius:8px;border:1px solid var(--border-default);background:var(--bg-base);color:var(--text-primary);font-size:0.78rem;">
+            <option value="Monitoring">🔍 Monitoring</option>
+            <option value="Treating">🚿 Treating</option>
+            <option value="Resolved">✅ Resolved</option>
+          </select>
+        </div>
+        <textarea id="scan-note-input" rows="2" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--border-default);background:var(--bg-base);color:var(--text-primary);font-family:var(--font-sans);font-size:0.84rem;resize:vertical;"
+                  data-en="Add field observations (e.g., Block B row 4, sprayed Neem oil today)..."
+                  data-ta="வயல் குறிப்புகளை எழுதவும்..."
+                  placeholder="Add field observations (e.g., Block B row 4, sprayed Neem oil today)..."></textarea>
+        <button class="btn btn-outline btn-sm" style="margin-top:8px;width:100%;justify-content:center;" onclick="saveScanNote()">
+          💾 <span data-en="Save Note to SQLite Archive" data-ta="குறிப்பைச் சேமி">Save Note to SQLite Archive</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Column: Diagnosis Details + Treatments + Weather/Recovery + Quick Dosage + AgroBot -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <!-- Disease Header Card -->
+      <div class="card" style="padding:24px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div style="font-size:2.5rem;" id="res-emoji">🌿</div>
+            <div>
+              <h2 style="font-family:var(--font-serif);font-size:1.55rem;font-weight:700;" id="res-name">Loading...</h2>
+              <div style="font-size:0.85rem;color:var(--text-secondary);font-style:italic;margin-top:2px;" id="res-cause"></div>
+            </div>
+          </div>
+          <div id="res-severity-badge"></div>
+        </div>
+
+        <!-- Symptoms Box -->
+        <div style="margin-top:18px;padding:14px 16px;background:var(--bg-base);border-radius:12px;border:1px solid var(--border-default);">
+          <div style="font-size:0.75rem;font-family:var(--font-mono);color:var(--accent-primary);text-transform:uppercase;margin-bottom:4px;"
+               data-en="Observed Symptoms" data-ta="கண்டறியப்பட்ட அறிகுறிகள்">
+            Observed Symptoms
+          </div>
+          <p style="font-size:0.9rem;color:var(--text-primary);line-height:1.6;" id="res-symptoms"></p>
+        </div>
+
+        <!-- Weather Trigger & Recovery Timeline Row (Expanded DB Fields) -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;">
+          <div style="padding:12px 14px;background:var(--bg-base);border-radius:12px;border:1px solid var(--border-subtle);">
+            <div style="font-size:0.72rem;font-family:var(--font-mono);color:var(--text-muted);text-transform:uppercase;" data-en="🌦️ Favorable Weather Trigger" data-ta="🌦️ வானிலை காரணி">
+              🌦️ Favorable Weather Trigger
+            </div>
+            <div style="font-size:0.83rem;color:var(--text-primary);margin-top:4px;font-weight:500;" id="res-weather">—</div>
+          </div>
+          <div style="padding:12px 14px;background:var(--bg-base);border-radius:12px;border:1px solid var(--border-subtle);">
+            <div style="font-size:0.72rem;font-family:var(--font-mono);color:var(--text-muted);text-transform:uppercase;" data-en="⏱️ Expected Recovery Window" data-ta="⏱️ எதிர்பார்க்கப்படும் மீட்பு காலம்">
+              ⏱️ Expected Recovery Window
+            </div>
+            <div style="font-size:0.83rem;color:var(--accent-primary);margin-top:4px;font-weight:600;" id="res-recovery">—</div>
+          </div>
+        </div>
+
+        <!-- Treatment Tabs (4 Tabs including Prevention) -->
+        <div style="margin-top:20px;">
+          <div class="treatment-tabs">
+            <button class="tab-btn active" data-tab="immediate">
+              ⚡ <span data-en="Immediate Action" data-ta="உடனடி நடவடிக்கை">Immediate Action</span>
+            </button>
+            <button class="tab-btn" data-tab="organic">
+              🌿 <span data-en="Organic Remedy" data-ta="இயற்கை தீர்வு">Organic Remedy</span>
+            </button>
+            <button class="tab-btn" data-tab="chemical">
+              🧪 <span data-en="Chemical Control" data-ta="வேதியியல் கட்டுப்பாடு">Chemical Control</span>
+            </button>
+            <button class="tab-btn" data-tab="prevention">
+              🛡️ <span data-en="Prevention" data-ta="தடுப்பு முறை">Prevention</span>
+            </button>
+          </div>
+
+          <div class="treatment-box" id="res-treatment-text"></div>
+        </div>
+
+        <!-- Quick Field Spray Dosage Widget -->
+        <div style="margin-top:16px;padding:14px 16px;background:var(--bg-elevated);border-radius:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:1.3rem;">🧮</span>
+            <div>
+              <div style="font-size:0.82rem;font-weight:700;color:var(--text-primary);" data-en="Quick Spray Estimator for Your Plot" data-ta="உங்கள் நிலத்திற்கான மருந்து அளவு">
+                Quick Spray Estimator for Your Plot
+              </div>
+              <div style="font-size:0.76rem;color:var(--text-secondary);" id="quick-dosage-output">
+                For 1 Acre: ~200L water (13 tanks) &bull; 1,000 ml Neem Oil OR 500 g Fungicide
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label style="font-size:0.76rem;color:var(--text-secondary);" data-en="Acres:" data-ta="ஏக்கர்:">Acres:</label>
+            <input type="number" id="quick-acre-input" value="1" min="0.1" max="100" step="0.5"
+                   onchange="updateQuickDosage()" oninput="updateQuickDosage()"
+                   style="width:70px;padding:6px 8px;border-radius:8px;border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-primary);font-family:var(--font-mono);font-size:0.82rem;">
+          </div>
+        </div>
+      </div>
+
+      <!-- AgroBot Follow-Up Chat Card -->
+      <div class="card chat-card">
+        <div class="chat-header">
+          <div class="chat-avatar">🤖</div>
+          <div>
+            <div style="font-family:var(--font-serif);font-weight:700;font-size:0.95rem;" data-en="AgroBot — AI Agronomy Advisor" data-ta="AgroBot — AI வேளாண் ஆலோசகர்">
+              AgroBot — AI Agronomy Advisor
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-muted);" data-en="Ask follow-up questions in English or Tamil about dosage, organic sprays, or prevention" data-ta="தமிழ் அல்லது ஆங்கிலத்தில் சந்தேகங்களைக் கேளுங்கள்">
+              Ask follow-up questions in English or Tamil about dosage, organic sprays, or prevention
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-messages" id="chat-messages"></div>
+
+        <!-- Quick Question Chips -->
+        <div class="chat-quick-chips">
+          <button class="chip" data-q-en="How do I prepare the organic spray?" data-q-ta="இயற்கை தெளிப்பு தயாரிப்பது எப்படி?">
+            🌿 <span data-en="Organic spray recipe?" data-ta="இயற்கை தெளிப்பு முறை?">Organic spray recipe?</span>
+          </button>
+          <button class="chip" data-q-en="What is the chemical fungicide dosage?" data-q-ta="வேதியியல் மருந்து அளவு என்ன?">
+            🧪 <span data-en="Chemical dosage?" data-ta="மருந்து அளவு என்ன?">Chemical dosage?</span>
+          </button>
+          <button class="chip" data-q-en="How to prevent this next season?" data-q-ta="அடுத்த பருவத்தில் இதைத் தடுப்பது எப்படி?">
+            🛡️ <span data-en="How to prevent next season?" data-ta="தடுப்பது எப்படி?">How to prevent next season?</span>
+          </button>
+          <button class="chip" data-q-en="Irrigation and fertilizer advice?" data-q-ta="நீர்ப்பாசனம் மற்றும் உர ஆலோசனை?">
+            💧 <span data-en="Water & soil tips?" data-ta="நீர் & உர ஆலோசனை?">Water &amp; soil tips?</span>
+          </button>
+        </div>
+
+        <form class="chat-input-row" id="chat-form">
+          <input type="text" class="chat-input" id="chat-input"
+                 data-en="Ask AgroBot anything about your crop..."
+                 data-ta="உங்கள் பயிர் பற்றி AgroBot-இடம் கேளுங்கள்..."
+                 placeholder="Ask AgroBot anything about your crop...">
+          <button type="submit" class="btn btn-primary btn-sm" id="chat-send-btn">
+            <span data-en="Send" data-ta="அனுப்பு">Send</span> ➤
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/result.js"></script>
+{% endblock %}

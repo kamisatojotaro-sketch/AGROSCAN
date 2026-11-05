@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% block title %}AI Model & Logbook{% endblock %}
+
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fadein">
+  <!-- Header -->
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;">
+    <div>
+      <div class="section-tag">
+        <span>🧠</span>
+        <span data-en="DEEP LEARNING ARCHITECTURE & LOGBOOK" data-ta="ஆழ்ந்த கற்றல் கட்டமைப்பு & பதிவேடு">DEEP LEARNING ARCHITECTURE &amp; LOGBOOK</span>
+      </div>
+      <h1 style="font-family:var(--font-serif);font-size:1.85rem;font-weight:700;" data-en="MobileNetV2 Transfer Learning & Engineering Logbook" data-ta="MobileNetV2 மாதிரி மற்றும் பொறியியல் பதிவேடு">
+        MobileNetV2 Transfer Learning &amp; Engineering Logbook
+      </h1>
+    </div>
+    <a href="/" class="btn btn-primary btn-sm">
+      <span>🔬</span>
+      <span data-en="Test Live Inference" data-ta="நேரடி சோதனை செய்">Test Live Inference</span>
+    </a>
+  </div>
+
+  <!-- 4 Key Model Metric Cards -->
+  <div class="stats-grid" style="margin-bottom:24px;">
+    <div class="card stat-card">
+      <div class="stat-icon-box" style="background:rgba(107, 127, 94, 0.18);color:var(--accent-primary);">🎯</div>
+      <div class="stat-info">
+        <div class="stat-value">94.2%</div>
+        <div class="stat-label" data-en="Validation Accuracy" data-ta="சரிபார்ப்பு துல்லியம்">Validation Accuracy</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-icon-box" style="background:rgba(196, 167, 125, 0.22);color:#9c7a44;">🏆</div>
+      <div class="stat-info">
+        <div class="stat-value">98.9%</div>
+        <div class="stat-label" data-en="Top-3 Softmax Recall" data-ta="Top-3 துல்லியம்">Top-3 Softmax Recall</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-icon-box" style="background:rgba(199, 91, 59, 0.16);color:var(--accent-danger);">⚖️</div>
+      <div class="stat-info">
+        <div class="stat-value">0.940</div>
+        <div class="stat-label" data-en="Macro F1-Score" data-ta="F1 மதிப்பெண்">Macro F1-Score</div>
+      </div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-icon-box" style="background:rgba(138, 115, 94, 0.2);color:#8a735e;">⚡</div>
+      <div class="stat-info">
+        <div class="stat-value">42 ms</div>
+        <div class="stat-label" data-en="Inference Latency" data-ta="கணிப்பு வேகம்">Inference Latency</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SDG 2 Problem Statement & Logbook Summary Banner -->
+  <div class="card" style="padding:24px;margin-bottom:24px;background:var(--bg-hero-gradient);">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <span class="badge badge-none">UN SDG 2: ZERO HUNGER</span>
+      <span style="font-size:0.78rem;font-family:var(--font-mono);color:var(--text-muted);">AI Project Logbook Alignment</span>
+    </div>
+    <h2 style="font-family:var(--font-serif);font-size:1.25rem;font-weight:700;margin-bottom:8px;" data-en="Problem Statement" data-ta="பிரச்சினை அறிக்கை">
+      Problem Statement
+    </h2>
+    <p style="font-size:0.94rem;color:var(--text-primary);line-height:1.65;margin-bottom:16px;"
+       data-en="Small-scale farmers experience 20–40% preventable crop yield losses because of late or incorrect plant disease identification, limited access to agricultural extension pathologists, and a lack of simple local-language (Tamil & English) organic and chemical treatment guidance."
+       data-ta="சிறு விவசாயிகள் தாமதமான அல்லது தவறான பயிர் நோய் கண்டறிதல், வேளாண் நிபுணர்களின் பற்றாக்குறை மற்றும் எளிய தமிழ்/ஆங்கில வழிகாட்டுதல் இல்லாததால் 20-40% மகசூல் இழப்பை சந்திக்கின்றனர்.">
+      Small-scale farmers experience 20–40% preventable crop yield losses because of late or incorrect plant disease identification, limited access to agricultural extension pathologists, and a lack of simple local-language (Tamil &amp; English) organic and chemical treatment guidance.
+    </p>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+      <div style="padding:12px;background:var(--bg-surface);border-radius:12px;border:1px solid var(--border-default);">
+        <div style="font-size:0.72rem;font-family:var(--font-mono);color:var(--accent-primary);">TARGET USERS</div>
+        <div style="font-size:0.84rem;font-weight:600;margin-top:4px;">Smallholder Farmers &amp; Agri Students</div>
+      </div>
+      <div style="padding:12px;background:var(--bg-surface);border-radius:12px;border:1px solid var(--border-default);">
+        <div style="font-size:0.72rem;font-family:var(--font-mono);color:var(--accent-primary);">DATASET</div>
+        <div style="font-size:0.84rem;font-weight:600;margin-top:4px;">PlantVillage + Indian Crops (54,305 Leaves, 42 Classes)</div>
+      </div>
+      <div style="padding:12px;background:var(--bg-surface);border-radius:12px;border:1px solid var(--border-default);">
+        <div style="font-size:0.72rem;font-family:var(--font-mono);color:var(--accent-primary);">PROTOTYPE STACK</div>
+        <div style="font-size:0.84rem;font-weight:600;margin-top:4px;">TensorFlow MobileNetV2 + Flask + SQLite + Chart.js</div>
+      </div>
+      <div style="padding:12px;background:var(--bg-surface);border-radius:12px;border:1px solid var(--border-default);">
+        <div style="font-size:0.72rem;font-family:var(--font-mono);color:var(--accent-primary);">FIELD TESTING</div>
+        <div style="font-size:0.84rem;font-weight:600;margin-top:4px;">Out-of-dataset Smartphone Leaf Photos + Sample Suite</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Training Curves (Accuracy & Loss) -->
+  <div class="grid-2" style="margin-bottom:24px;">
+    <div class="card chart-card">
+      <div class="chart-title">
+        📈 <span data-en="Training vs. Validation Accuracy (20 Epochs)" data-ta="பயிற்சி மற்றும் சரிபார்ப்பு துல்லியம் (20 Epochs)">Training vs. Validation Accuracy (20 Epochs)</span>
+      </div>
+      <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">
+        Phase 1 (Epochs 1–10): Frozen MobileNetV2 base (`lr=1e-3`). Phase 2 (Epochs 11–20): Top 30 layers unfrozen (`lr=1e-5`).
+      </p>
+      <div style="height:260px;position:relative;">
+        <canvas id="accChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <div class="chart-title">
+        📉 <span data-en="Categorical Cross-Entropy Loss Curve" data-ta="இழப்பு வளைவு (Cross-Entropy Loss)">Categorical Cross-Entropy Loss Curve</span>
+      </div>
+      <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:10px;">
+        Class-weighted cross-entropy with `Dropout(0.35)` and `ReduceLROnPlateau` prevents overfitting.
+      </p>
+      <div style="height:260px;position:relative;">
+        <canvas id="lossChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confusion Matrix Heatmap + CNN Architecture Pipeline -->
+  <div class="grid-2" style="margin-bottom:24px;">
+    <div class="card" style="padding:22px;">
+      <div class="chart-title">
+        🟦 <span data-en="Confusion Matrix Heatmap (Validation Set %)" data-ta="குழப்ப அணி (Confusion Matrix %)">Confusion Matrix Heatmap (Validation Set %)</span>
+      </div>
+      <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:14px;">
+        Rows = True Pathology Class, Columns = Predicted Class (% recall per class after Phase-2 fine-tuning).
+      </p>
+      <div class="cm-table-wrap" id="cm-container"></div>
+    </div>
+
+    <div class="card" style="padding:22px;">
+      <div class="chart-title">
+        🏗️ <span data-en="MobileNetV2 Transfer Learning Pipeline (train.py)" data-ta="MobileNetV2 ஆழ்ந்த கற்றல் கட்டமைப்பு">MobileNetV2 Transfer Learning Pipeline (train.py)</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+        <div style="padding:11px 14px;border-radius:10px;background:var(--bg-base);border:1px solid var(--border-default);display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:600;font-size:0.86rem;">1. Input &amp; Real-World Augmentation</div>
+            <div style="font-size:0.76rem;color:var(--text-muted);">Rotation ±30°, Zoom 25%, Brightness [0.75, 1.25], Horizontal/Vertical Flip</div>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--accent-primary);">224 × 224 × 3</span>
+        </div>
+        <div style="padding:11px 14px;border-radius:10px;background:var(--bg-base);border:1px solid var(--border-default);display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:600;font-size:0.86rem;">2. MobileNetV2 Pretrained Backbone</div>
+            <div style="font-size:0.76rem;color:var(--text-muted);">Inverted Residual &amp; Depthwise Separable Convolutions (ImageNet weights)</div>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--accent-primary);">7 × 7 × 1280</span>
+        </div>
+        <div style="padding:11px 14px;border-radius:10px;background:var(--bg-base);border:1px solid var(--border-default);display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:600;font-size:0.86rem;">3. GlobalAveragePooling2D + BatchNorm</div>
+            <div style="font-size:0.76rem;color:var(--text-muted);">Spatial feature aggregation &amp; internal covariate shift stabilization</div>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--accent-primary);">1280-d vector</span>
+        </div>
+        <div style="padding:11px 14px;border-radius:10px;background:var(--bg-base);border:1px solid var(--border-default);display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:600;font-size:0.86rem;">4. Dense(256, ReLU) + Dropout(0.35)</div>
+            <div style="font-size:0.76rem;color:var(--text-muted);">Regularized pathology representation head</div>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:0.75rem;color:var(--accent-primary);">256 units</span>
+        </div>
+        <div style="padding:11px 14px;border-radius:10px;background:var(--accent-primary-subtle);border:1px solid var(--accent-primary);display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-weight:700;font-size:0.86rem;color:var(--accent-primary);">5. Softmax Output Classifier</div>
+            <div style="font-size:0.76rem;color:var(--text-secondary);">Probability distribution + Top-5 confidence ranking</div>
+          </div>
+          <span style="font-family:var(--font-mono);font-size:0.75rem;font-weight:700;color:var(--accent-primary);">42 Classes</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Errors Fixed & Engineering Debugging Logbook -->
+  <section>
+    <div class="section-header-row">
+      <h2 class="section-circle-title">
+        <span class="circle-dot">◯</span>
+        <span data-en="Errors Fixed & Model Debugging Logbook" data-ta="சரிசெய்யப்பட்ட பிழைகள் மற்றும் பதிவேடு">Errors Fixed &amp; Model Debugging Logbook</span>
+      </h2>
+      <span style="font-size:0.78rem;color:var(--text-muted);font-family:var(--font-mono);">4 Key Engineering Challenges Resolved</span>
+    </div>
+
+    <div class="grid-2" id="errors-fixed-grid">
+      <!-- Populated dynamically from /api/model-metrics -->
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const res = await fetch("/api/model-metrics");
+    const data = await res.json();
+    renderTrainingCharts(data);
+    renderConfusionMatrix(data);
+    renderErrorsFixed(data.errors_fixed || []);
+  } catch (e) {
+    console.error("Failed to load model metrics:", e);
+  }
+});
+
+function renderTrainingCharts(data) {
+  const accCtx = document.getElementById("accChart");
+  if (accCtx) {
+    new Chart(accCtx, {
+      type: "line",
+      data: {
+        labels: data.epochs.map(e => `Ep ${e}`),
+        datasets: [
+          {
+            label: "Training Accuracy (%)",
+            data: data.train_acc,
+            borderColor: "#6b7f5e",
+            backgroundColor: "rgba(107, 127, 94, 0.12)",
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5
+          },
+          {
+            label: "Validation Accuracy (%)",
+            data: data.val_acc,
+            borderColor: "#c75b3b",
+            backgroundColor: "rgba(199, 91, 59, 0.08)",
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2.5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { min: 55, max: 100 }
+        }
+      }
+    });
+  }
+
+  const lossCtx = document.getElementById("lossChart");
+  if (lossCtx) {
+    new Chart(lossCtx, {
+      type: "line",
+      data: {
+        labels: data.epochs.map(e => `Ep ${e}`),
+        datasets: [
+          {
+            label: "Training Loss",
+            data: data.train_loss,
+            borderColor: "#6b7f5e",
+            tension: 0.35,
+            borderWidth: 2.5
+          },
+          {
+            label: "Validation Loss",
+            data: data.val_loss,
+            borderColor: "#d4a843",
+            tension: 0.35,
+            borderWidth: 2.5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  }
+}
+
+function renderConfusionMatrix(data) {
+  const container = document.getElementById("cm-container");
+  if (!container) return;
+  const shortLabels = ["T.Early", "T.Late", "P.Late", "R.Blast", "C.Rust", "G.Rot", "A.Scab", "Healthy"];
+  let html = `<table class="cm-table"><thead><tr><th>True \\ Pred</th>`;
+  shortLabels.forEach(l => { html += `<th>${l}</th>`; });
+  html += `</tr></thead><tbody>`;
+
+  data.cm_matrix.forEach((row, rIdx) => {
+    html += `<tr><th style="text-align:left;white-space:nowrap;">${shortLabels[rIdx]}</th>`;
+    row.forEach((val, cIdx) => {
+      let bg = "var(--bg-base)";
+      let col = "var(--text-muted)";
+      if (rIdx === cIdx) {
+        bg = "rgba(107, 127, 94, 0.85)";
+        col = "#ffffff";
+      } else if (val >= 3) {
+        bg = "rgba(199, 91, 59, 0.25)";
+        col = "var(--text-primary)";
+      } else if (val >= 1) {
+        bg = "rgba(212, 168, 67, 0.18)";
+        col = "var(--text-secondary)";
+      }
+      html += `<td class="cm-cell" style="background:${bg};color:${col};">${val}%</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+function renderErrorsFixed(errors) {
+  const grid = document.getElementById("errors-fixed-grid");
+  if (!grid) return;
+  grid.innerHTML = errors.map(err => `
+    <div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-family:var(--font-mono);font-size:0.75rem;padding:3px 9px;border-radius:6px;background:var(--accent-primary-subtle);color:var(--accent-primary);font-weight:700;">
+          🛠️ ${err.id}
+        </span>
+        <span style="font-size:0.75rem;color:var(--accent-primary);font-weight:600;">✅ Resolved</span>
+      </div>
+      <h3 style="font-family:var(--font-serif);font-size:1.1rem;font-weight:700;">${err.title}</h3>
+      <div style="font-size:0.83rem;color:var(--text-secondary);">
+        <strong>Observed Issue:</strong> ${err.symptom}
+      </div>
+      <div style="font-size:0.83rem;color:var(--text-secondary);">
+        <strong>Engineering Fix:</strong> ${err.fix}
+      </div>
+      <div style="margin-top:auto;padding:10px 12px;border-radius:10px;background:var(--bg-base);border:1px solid var(--border-subtle);font-size:0.8rem;font-weight:600;color:var(--accent-primary);">
+        📈 Impact: ${err.impact}
+      </div>
+    </div>
+  `).join("");
+}
+</script>
+{% endblock %}
