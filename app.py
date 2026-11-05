@@ -34,19 +34,23 @@ except ImportError:
     GEMINI_AVAILABLE = False
 
 # ─────────────────────────────────────────────
-# App Setup
+# App Setup (Local + Vercel Serverless Compatible)
 # ─────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+IS_VERCEL = bool(os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"))
+WRITABLE_DIR = "/tmp" if IS_VERCEL else BASE_DIR
+
+UPLOAD_FOLDER = os.path.join(WRITABLE_DIR, "uploads")
 SAMPLES_FOLDER = os.path.join(BASE_DIR, "static", "img", "samples")
 MODEL_PATH = os.path.join(BASE_DIR, "model", "agroscan_model.h5")
 CLASS_INDICES_PATH = os.path.join(BASE_DIR, "model", "class_indices.json")
-DB_PATH = os.path.join(BASE_DIR, "agroscan.db")
+DB_PATH = os.path.join(WRITABLE_DIR, "agroscan.db")
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(SAMPLES_FOLDER, exist_ok=True)
-os.makedirs(os.path.join(BASE_DIR, "model"), exist_ok=True)
+if not IS_VERCEL:
+    os.makedirs(SAMPLES_FOLDER, exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, "model"), exist_ok=True)
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
